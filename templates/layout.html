@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <title>PRTY - {% block title %}{% endblock title %}</title>
+        <link rel="stylesheet" href="/static/styles.css">
+    </head>
+    <body>
+        <header>
+            <div class="navbar fill flex justify-between">
+                <div class="left-nav flex p-5 flex-reverse">
+                    <a href="/"><img src="/static/images/textlogo.svg" alt="Logo image" class="logo"></a>
+                </div>
+                <div class="right-nav flex p-5">
+                    hi
+                </div>
+            </div>
+        </header>
+        <main>
+            {% block body %}{% endblock body %}
+        </main>
+        <footer>
+
+        </footer>
+    </body> 
+</html>
