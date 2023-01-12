@@ -1,3 +1,5 @@
+@use 'sass:list';
+
 // Variables
 $primary-red: #ff6161;
 $primary-blue: #3868ff;
@@ -12,7 +14,7 @@ $black: #000000;
 
 @function getColor($color, $level: 10) {
     @if $level > 10 {
-        @return lighten($color, $level * 10%);
+        @return lighten($color, ($level - 10) * 10%);
     } @else {
         @return darken($color, 100% - $level * 10%);
     }
@@ -37,6 +39,35 @@ header {
     box-shadow: 0 3px 7px getColor($white, 8);
 }
 
+.create, .join {
+    border-radius: 15px;
+    background-color: getColor($primary-magenta, 13);
+}
+
+.create-button {
+    border-radius: 5px;
+}
+
+.color-purple {
+    color: $primary-magenta;
+}
+
+.color-white {
+    color: $white;
+}
+
+.background-purple {
+    background-color: $primary-magenta;
+}
+
+.background-white {
+    background-color: $white;
+}
+
+.background-transparent {
+    background-color: rgba($white, 0);
+}
+
 .flex {
     display: flex;
     justify-content: space-evenly;
@@ -49,6 +80,14 @@ header {
 
 .justify-between {
     justify-content: space-between;
+}
+
+.grid {
+    display: grid;
+}
+
+.block {
+    display: block;
 }
 
 .logo {
@@ -67,77 +106,51 @@ header {
     width: 25%;
 }
 
-.p-1 {
-    padding: 2.5em;
+.bs {
+    box-shadow: 0px 0px 3px getColor($black, 18);
 }
 
-.p-2 {
-    padding: 2.1em;
+.inset-bs  {
+    box-shadow: inset 0px 0px 3px getColor($black, 18);
 }
 
-.p-3 {
-    padding: 1.7em;
+@mixin margin_padding {
+    // Add all margin and padding classes (EX: mt-5)
+    $sizes: 0.5em, 0.9em, 1.3em, 1.7em, 2.1em, 2.5em, auto;
+    $direction_shorthands: 'l', 'r', 't', 'b', '';
+    $directions: '-left', '-right', '-top', '-bottom', '';
+    $extras: 6,5,4,3,2,1,auto;
+
+    @for $i from 1 through 2 {
+        $tag: if($i == 1, 'm', 'p');
+        $attribute: if($i == 1, 'margin', 'padding');
+
+        @for $j from 1 through 7 {
+            @for $shorthand from 1 through 5 {
+                .#{$tag}#{list.nth($direction_shorthands, $shorthand)}-#{list.nth($extras, 8 - $j)} {
+                    #{$attribute}#{list.nth($directions, $shorthand)}: #{list.nth($sizes, 8 - $j)};
+                }
+            }
+        }
+    }
 }
 
-.p-4 {
-    padding: 1.3em;
+@include margin_padding();
+
+@mixin height_width {
+    @for $i from 1 through 2 {
+        $type: if($i == 1, 'height', 'width');
+        $prefix: if($i == 1, 'h', 'w');
+
+        @for $j from 1 through 4 {
+            .#{$prefix}-#{$j * 25} {
+                #{$type}: $j * 25%;
+            }
+        }
+    }
 }
 
-.p-5 {
-    padding: 0.9em;
-}
-
-.p-6 {
-    padding: 0.5em;
-}
-
-.pl-1 {
-    padding-left: 2.5em;
-}
-
-.pl-2 {
-    padding-left: 2.1em;
-}
-
-.pl-3 {
-    padding-left: 1.7em;
-}
-
-.pl-4 {
-    padding-left: 1.3em;
-}
-
-.pl-5 {
-    padding-left: 0.9em;
-}
-
-.pl-6 {
-    padding-left: 0.5em;
-}
-
-.pr-1 {
-    padding-right: 2.5em;
-}
-
-.pr-2 {
-    padding-right: 2.1em;
-}
-
-.pr-3 {
-    padding-right: 1.7em;
-}
-
-.pr-4 {
-    padding-right: 1.3em;
-}
-
-.pr-5 {
-    padding-right: 0.9em;
-}
-
-.pr-6 {
-    padding-right: 0.5em;
-}
+@include height_width();
 
 .fs-1 {
     font-size: 2em;
@@ -159,8 +172,16 @@ header {
     font-size: 0.8em;
 }
 
+.fw-bold {
+    font-weight: bold;
+}
+
 .text-center {
     text-align: center;
+}
+
+.align-center {
+    align-self: center;
 }
 
 .fixed-bottom {
@@ -168,16 +189,29 @@ header {
     bottom: 0;
 }
 
-input[type=text] {
+main {
+    height: 50vh;
+}
+
+.name-input {
     border-radius: 4px;
 }
 
-input[type=text]::placeholder {
+.name-input::placeholder {
     color: getColor($white, 9);
 }
 
-input[type=text]:focus {
+.name-input:focus {
     background-color: getColor($primary-green, 9.5);
     outline: none;
     border-bottom: 4px solid getColor($primary-green, 8);
+}
+
+.lobby-input {
+    border-radius: 4px;
+    transition: outline 0.1s ease-in-out;
+}
+
+.lobby-input:focus {
+    outline: 4px solid $primary-magenta;
 }
