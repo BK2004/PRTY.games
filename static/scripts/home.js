@@ -16,4 +16,23 @@ function manageName() {
     });
 }
 
+// Private/public radios
+const radios = document.querySelectorAll("input[type=radio]");
+const lobbyName = document.querySelector(".lobby-input");
+
+function handleRadio() {
+    radios.forEach((radio) => {
+        radio.addEventListener("click", (e) => {
+            if (radio.checked) {
+                if (radio.id === "private") {
+                    lobbyName.disabled = true;
+                } else {
+                    lobbyName.disabled = false;
+                }
+            }
+        });
+    });
+}
+
 manageName();
+handleRadio();

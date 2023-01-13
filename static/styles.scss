@@ -29,6 +29,10 @@ $black: #000000;
     font-family: "Comic Sans MS", "Comic Sans", cursive;
 }
 
+a {
+    text-decoration: none;
+}
+
 header {
     background-color: $primary-green;
     color: $text-primary;
@@ -37,6 +41,17 @@ header {
 .navbar {
     font-size: 18px;
     box-shadow: 0 3px 7px getColor($white, 8);
+    height: 75px;
+    width: 100%;
+}
+
+.main {
+    height: 250px;
+}
+
+.lobby-browser {
+    height: calc(100% - (325px + 50px));
+    //overflow-y: scroll;
 }
 
 .create, .join {
@@ -44,7 +59,7 @@ header {
     background-color: getColor($primary-magenta, 13);
 }
 
-.create-button {
+.create-button, .join-button {
     border-radius: 5px;
 }
 
@@ -74,6 +89,14 @@ header {
     align-items: center;
 }
 
+.display-block {
+    display: block;
+}
+
+.display-inline-block {
+    display: inline-block;
+}
+
 .flex-reverse {
     flex-direction: row-reverse;
 }
@@ -93,17 +116,6 @@ header {
 .logo {
     width: auto;
     height: 2em;
-}
-
-.w-100 {
-    width: 100%;
-}
-
-.w-50 {
-    width: 50%;
-}
-.w-25 {
-    width: 25%;
 }
 
 .bs {
@@ -137,20 +149,20 @@ header {
 
 @include margin_padding();
 
-@mixin height_width {
+@mixin height_width($factor) {
     @for $i from 1 through 2 {
         $type: if($i == 1, 'height', 'width');
         $prefix: if($i == 1, 'h', 'w');
 
         @for $j from 1 through 4 {
             .#{$prefix}-#{$j * 25} {
-                #{$type}: $j * 25%;
+                #{$type}: $j * $factor;
             }
         }
     }
 }
 
-@include height_width();
+@include height_width(212px);
 
 .fs-1 {
     font-size: 2em;
@@ -187,6 +199,12 @@ header {
 .fixed-bottom {
     position: fixed;
     bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+}
+
+.fill {
+    width: 100%;
 }
 
 main {
@@ -195,6 +213,10 @@ main {
 
 .name-input {
     border-radius: 4px;
+}
+
+.lobby-input:disabled {
+    opacity: 30%;
 }
 
 .name-input::placeholder {
@@ -207,11 +229,55 @@ main {
     border-bottom: 4px solid getColor($primary-green, 8);
 }
 
-.lobby-input {
+.lobby-input, .code-input {
     border-radius: 4px;
     transition: outline 0.1s ease-in-out;
 }
 
-.lobby-input:focus {
+.lobby-input:focus, .code-input:focus {
     outline: 4px solid $primary-magenta;
+}
+
+table {
+    border-spacing: 0;
+}
+
+thead > tr {
+    th {
+        border: 5px solid $primary-green;
+        border-left: none;
+        background-color: getColor($primary-green, 12);
+        color: getColor($primary-green, 8);
+    }
+    th:first-child {
+        border-left: 5px solid $primary-green;
+    }
+}
+
+@mixin tableRowAlternations {
+    $colors: $primary-yellow, $primary-orange, $primary-red, $primary-blue, $primary-magenta, $primary-cyan, $primary-green;
+    @for $i from 0 through 6 {
+        tr:nth-child(7n - #{1 + $i}) {
+            td {
+                border-bottom: 3px solid #{list.nth($colors, $i + 1)};
+                border-right: 3px solid #{list.nth($colors, $i + 1)};
+                background-color: getColor(list.nth($colors, $i + 1), 12);
+                color: getColor(list.nth($colors, $i + 1), 8)
+            }
+
+            td:first-child {
+                border-left: 3px solid #{list.nth($colors, $i + 1)};
+            }
+        }
+    }
+}
+
+@include tableRowAlternations();
+
+@media only screen and (max-width: 828px) {
+    @include height_width(150px);
+}
+
+@media only screen and (max-width: 600px) {
+    @include height_width(120px);
 }

@@ -7,6 +7,10 @@
   font-family: "Comic Sans MS", "Comic Sans", cursive;
 }
 
+a {
+  text-decoration: none;
+}
+
 header {
   background-color: #08cc78;
   color: #ffffff;
@@ -15,6 +19,16 @@ header {
 .navbar {
   font-size: 18px;
   box-shadow: 0 3px 7px #cccccc;
+  height: 75px;
+  width: 100%;
+}
+
+.main {
+  height: 250px;
+}
+
+.lobby-browser {
+  height: calc(100% - 375px);
 }
 
 .create, .join {
@@ -22,7 +36,7 @@ header {
   background-color: #f7d0ff;
 }
 
-.create-button {
+.create-button, .join-button {
   border-radius: 5px;
 }
 
@@ -52,6 +66,14 @@ header {
   align-items: center;
 }
 
+.display-block {
+  display: block;
+}
+
+.display-inline-block {
+  display: inline-block;
+}
+
 .flex-reverse {
   flex-direction: row-reverse;
 }
@@ -71,18 +93,6 @@ header {
 .logo {
   width: auto;
   height: 2em;
-}
-
-.w-100 {
-  width: 100%;
-}
-
-.w-50 {
-  width: 50%;
-}
-
-.w-25 {
-  width: 25%;
 }
 
 .bs {
@@ -374,35 +384,35 @@ header {
 }
 
 .h-25 {
-  height: 25%;
+  height: 212px;
 }
 
 .h-50 {
-  height: 50%;
+  height: 424px;
 }
 
 .h-75 {
-  height: 75%;
+  height: 636px;
 }
 
 .h-100 {
-  height: 100%;
+  height: 848px;
 }
 
 .w-25 {
-  width: 25%;
+  width: 212px;
 }
 
 .w-50 {
-  width: 50%;
+  width: 424px;
 }
 
 .w-75 {
-  width: 75%;
+  width: 636px;
 }
 
 .w-100 {
-  width: 100%;
+  width: 848px;
 }
 
 .fs-1 {
@@ -440,6 +450,12 @@ header {
 .fixed-bottom {
   position: fixed;
   bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.fill {
+  width: 100%;
 }
 
 main {
@@ -448,6 +464,10 @@ main {
 
 .name-input {
   border-radius: 4px;
+}
+
+.lobby-input:disabled {
+  opacity: 30%;
 }
 
 .name-input::-moz-placeholder {
@@ -468,11 +488,148 @@ main {
   border-bottom: 4px solid #046a3e;
 }
 
-.lobby-input {
+.lobby-input, .code-input {
   border-radius: 4px;
   transition: outline 0.1s ease-in-out;
 }
 
-.lobby-input:focus {
+.lobby-input:focus, .code-input:focus {
   outline: 4px solid #de37ff;
+}
+
+table {
+  border-spacing: 0;
+}
+
+thead > tr th {
+  border: 5px solid #08cc78;
+  border-left: none;
+  background-color: #42f8aa;
+  color: #046a3e;
+}
+thead > tr th:first-child {
+  border-left: 5px solid #08cc78;
+}
+
+tr:nth-child(7n-1) td {
+  border-bottom: 3px solid #ffd966;
+  border-right: 3px solid #ffd966;
+  background-color: #fff2cc;
+  color: #ffc000;
+}
+tr:nth-child(7n-1) td:first-child {
+  border-left: 3px solid #ffd966;
+}
+
+tr:nth-child(7n-2) td {
+  border-bottom: 3px solid #f78647;
+  border-right: 3px solid #f78647;
+  background-color: #fbc6a9;
+  color: #cf5009;
+}
+tr:nth-child(7n-2) td:first-child {
+  border-left: 3px solid #f78647;
+}
+
+tr:nth-child(7n-3) td {
+  border-bottom: 3px solid #ff6161;
+  border-right: 3px solid #ff6161;
+  background-color: #ffc7c7;
+  color: #fa0000;
+}
+tr:nth-child(7n-3) td:first-child {
+  border-left: 3px solid #ff6161;
+}
+
+tr:nth-child(7n-4) td {
+  border-bottom: 3px solid #3868ff;
+  border-right: 3px solid #3868ff;
+  background-color: #9eb5ff;
+  color: #0032d1;
+}
+tr:nth-child(7n-4) td:first-child {
+  border-left: 3px solid #3868ff;
+}
+
+tr:nth-child(7n-5) td {
+  border-bottom: 3px solid #de37ff;
+  border-right: 3px solid #de37ff;
+  background-color: #ef9dff;
+  color: #ae00d0;
+}
+tr:nth-child(7n-5) td:first-child {
+  border-left: 3px solid #de37ff;
+}
+
+tr:nth-child(7n-6) td {
+  border-bottom: 3px solid #48c0f6;
+  border-right: 3px solid #48c0f6;
+  background-color: #a9e1fb;
+  color: #0a91ce;
+}
+tr:nth-child(7n-6) td:first-child {
+  border-left: 3px solid #48c0f6;
+}
+
+tr:nth-child(7n-7) td {
+  border-bottom: 3px solid #08cc78;
+  border-right: 3px solid #08cc78;
+  background-color: #42f8aa;
+  color: #046a3e;
+}
+tr:nth-child(7n-7) td:first-child {
+  border-left: 3px solid #08cc78;
+}
+
+@media only screen and (max-width: 828px) {
+  .h-25 {
+    height: 150px;
+  }
+  .h-50 {
+    height: 300px;
+  }
+  .h-75 {
+    height: 450px;
+  }
+  .h-100 {
+    height: 600px;
+  }
+  .w-25 {
+    width: 150px;
+  }
+  .w-50 {
+    width: 300px;
+  }
+  .w-75 {
+    width: 450px;
+  }
+  .w-100 {
+    width: 600px;
+  }
+}
+@media only screen and (max-width: 600px) {
+  .h-25 {
+    height: 120px;
+  }
+  .h-50 {
+    height: 240px;
+  }
+  .h-75 {
+    height: 360px;
+  }
+  .h-100 {
+    height: 480px;
+  }
+  .w-25 {
+    width: 120px;
+  }
+  .w-50 {
+    width: 240px;
+  }
+  .w-75 {
+    width: 360px;
+  }
+  .w-100 {
+    width: 480px;
+  }
 }/*# sourceMappingURL=styles.css.map */
