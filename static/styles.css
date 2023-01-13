@@ -4,7 +4,7 @@
   border: 0;
   background-color: inherit;
   color: inherit;
-  font-family: "Comic Sans MS", "Comic Sans", cursive;
+  font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue", sans-serif;
 }
 
 a {
@@ -632,8 +632,4 @@ tr:nth-child(7n-7) td:first-child {
   .w-100 {
     width: 480px;
   }
-}
-@font-face {
-  font-family: "Comic Sans MS";
-  src: url("comic-sans-ms/comici.ttf");
 }/*# sourceMappingURL=styles.css.map */
