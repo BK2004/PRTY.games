@@ -281,3 +281,8 @@ thead > tr {
 @media only screen and (max-width: 600px) {
     @include height_width(120px);
 }
+
+@font-face {
+    font-family: 'Comic Sans MS';
+    src: url("comic-sans-ms/comici.ttf");
+  }
