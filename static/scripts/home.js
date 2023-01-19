@@ -30,8 +30,7 @@ function handleJoinInput() {
 // Name input
 const maxNameLength = 12;
 const nameInput = document.querySelector('.name-input');
-const formNames = document.querySelectorAll('.player-name')
-const updateURL = "http://127.0.0.1:5000/updateName"
+const updateURL = "/updateName"
 
 function manageName() {
     nameInput.addEventListener("focusout", (e) => {

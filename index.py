@@ -17,6 +17,7 @@ def routeError(code):
 
 @app.route("/", methods=["POST", "GET"])
 def index():
+    checkName()
     if request.method == "POST":
         roomType = request.form['type']
         name = 'PRTY room'
@@ -35,6 +36,8 @@ def index():
 
 @app.route("/room/<code>", methods=["POST", "GET"])
 def join(code=None):
+    checkName()
+
     if code is None or code.strip() == "":
         return redirect("/")
 
@@ -54,6 +57,10 @@ def updateName():
 
     session['player-name'] = name
     return "SUCCESS"
+
+def checkName():
+    if session.get('player-name') is None:
+        session['player-name'] = "Guest"
 
 if __name__ == "__main__":
     app.run(debug=True)
