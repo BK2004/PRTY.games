@@ -6,7 +6,7 @@ import os
 app = Flask(__name__)
 app.secret_key = 'BAD_KEY'
 
-client = MongoClient(os.getenv("DATABASE_URI"))
+client = MongoClient(os.getenv("MONGODB_URI"))
 
 db = client.prty_db
 rooms = db.rooms
