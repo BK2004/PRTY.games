@@ -1,4 +1,26 @@
 {% extends "layout.html" %}
 {% block title %}{{ code }}{% endblock title %}
 {% block scripts %}
+<script src="https://code.jquery.com/jquery-3.3.1.js"></script>
+<script src="https://cdn.socket.io/4.5.4/socket.io.min.js" integrity="sha384-/KNQL8Nu5gCHLqwqfQjA689Hhoqgi2S84SNUxC3roTe4EhJ9AfLkp8QiQcU8AMzI" crossorigin="anonymous"></script>
+<script type="text/javascript" charset="utf-8">
+    var socket = io();
+    const ROOM_CODE = '{{ code }}';
+</script>
+<script src="/static/scripts/room.js" defer></script>
 {% endblock scripts %}
+{% block body %}
+    <div class="display fill background-game fill-h flex">
+        <div class="game text-center fill fill-h">
+            g
+        </div>
+        <div class="chat background-chat w-50 fill-h flex flex-column justify-between">
+            <div class="chat-entries p-6">
+                
+            </div>
+            <div class="chat-input background-chat-dark fill">
+                <textarea class="p-6 input fill" maxlength="250" placeholder="Enter message here"></textarea>
+            </div>
+        </div>
+    </div>
+{% endblock body %}
