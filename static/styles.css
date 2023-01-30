@@ -24,7 +24,7 @@ header {
 }
 
 main {
-  height: calc(100vh - 75px);
+  height: calc(100vh - 75px - 2.5em);
 }
 
 .main {

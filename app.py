@@ -5,7 +5,7 @@ from pymongo import MongoClient
 import os
 
 app = Flask(__name__)
-app.secret_key = 'BAD_KEY'
+app.secret_key = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
 
 client = MongoClient(os.getenv("MONGODB_URI"))
@@ -113,4 +113,4 @@ def socket_disconnect():
         rooms.delete_one({'code': session['room-code']})
 
 if __name__ == "__main__":
-    socketio.run(app)
+    socketio.run(app, debug=True)
