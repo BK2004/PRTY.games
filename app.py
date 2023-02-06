@@ -48,6 +48,10 @@ def join(code=None):
     if code is None or code.strip() == "":
         return redirect("/")
 
+    # Check if already in the same lobby
+    if code == session.get("room-code"):
+        return redirect("/")
+
     # Check if lobby exists
     queryRes = rooms.find_one({"code": code})
     if queryRes is None:
@@ -58,6 +62,8 @@ def join(code=None):
         roomCounts[code] += 1
     else:
         roomCounts[code] = 1
+    
+    session['room-code'] = code
     
     return render_template("room.html", game=True, code=code, username=session['player-name'])
 
@@ -113,4 +119,4 @@ def socket_disconnect():
         rooms.delete_one({'code': session['room-code']})
 
 if __name__ == "__main__":
-    socketio.run(app, debug=True)
+    socketio.run(app, debug=False)

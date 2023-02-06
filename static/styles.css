@@ -70,6 +70,7 @@ main {
 
 .background-game {
   background-color: #ffffff;
+  height: calc(100vh - 75px);
 }
 
 .background-chat {

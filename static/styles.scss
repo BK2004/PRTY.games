@@ -95,6 +95,7 @@ main {
 
 .background-game {
     background-color: $game-background;
+    height: calc(100vh - 75px);
 }
 
 .background-chat {
