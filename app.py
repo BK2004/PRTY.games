@@ -39,6 +39,7 @@ def index():
 
         return redirect("/room/" + code)
     else:        
+        session['room-code'] = None
         return render_template("index.html", username=session['player-name'])
 
 @app.route("/room/<code>", methods=["POST", "GET"])
@@ -48,13 +49,13 @@ def join(code=None):
     if code is None or code.strip() == "":
         return redirect("/")
 
-    # Check if already in the same lobby
-    if code == session.get("room-code"):
-        return redirect("/")
-
     # Check if lobby exists
     queryRes = rooms.find_one({"code": code})
     if queryRes is None:
+        return redirect("/")
+
+    # Check if already in the same lobby
+    if code == session.get("room-code"):
         return redirect("/")
 
     # Lobby exists, so join
@@ -109,6 +110,9 @@ def message_send(data):
 
 @socketio.on("disconnect")
 def socket_disconnect():
+    # Does room exist
+    if session.get('room-code') is None or not session['room-code'] in roomCounts:
+        return
     leave_room(session['room-code'])
     emit('message recieve', {'username': 'SERVER', 'content': session['player-name'] + " has left the room."}, to=session['room-code'])
 

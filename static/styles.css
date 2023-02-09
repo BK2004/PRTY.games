@@ -7,6 +7,18 @@
   font-family: "Comic Sans MS", "Chalkboard SE", "Comic Neue", sans-serif;
 }
 
+.text-primary {
+  color: #ffffff;
+}
+
+.text-secondary {
+  color: #e6e6e6;
+}
+
+.text-tertiary {
+  color: #cccccc;
+}
+
 a {
   text-decoration: none;
 }
@@ -113,6 +125,10 @@ main {
 
 .justify-between {
   justify-content: space-between;
+}
+
+.justify-center {
+  justify-content: center;
 }
 
 .grid {
@@ -468,6 +484,10 @@ main {
   font-size: 0.8em;
 }
 
+.fw-normal {
+  font-weight: normal;
+}
+
 .fw-bold {
   font-weight: bold;
 }
@@ -482,6 +502,10 @@ main {
 
 .align-center {
   align-self: center;
+}
+
+.vertical-center {
+  vertical-align: middle;
 }
 
 .fixed-bottom {
@@ -508,10 +532,6 @@ main {
 }
 
 .name-input::-moz-placeholder {
-  color: #e6e6e6;
-}
-
-.name-input:-ms-input-placeholder {
   color: #e6e6e6;
 }
 
@@ -674,6 +694,27 @@ input[type=text]:focus {
   overflow-y: scroll;
 }
 
+.loading-image {
+  width: 100px;
+  height: 100px;
+  opacity: 0.5;
+  background: url("/static/images/logoborder.svg") center no-repeat;
+  background-size: contain;
+  animation-name: animCircle;
+  animation-duration: 15s;
+  animation-timing-function: linear;
+  animation-iteration-count: infinite;
+  display: block;
+}
+
+@keyframes animCircle {
+  to {
+    transform: rotate(360deg);
+  }
+  from {
+    transform: rotate(-360deg);
+  }
+}
 @media only screen and (max-width: 828px) {
   .h-25 {
     height: 150px;

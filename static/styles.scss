@@ -21,6 +21,8 @@ $primary-orange: #f78647;
 $game-background: $white;
 $chat-background: getColor($white, 9);
 $text-primary: $white;
+$text-secondary: getColor($white, 9);
+$text-tertiary: getColor($white, 8);
 
 * {
     margin: 0;
@@ -29,6 +31,18 @@ $text-primary: $white;
     background-color: inherit;
     color: inherit;
     font-family: 'Comic Sans MS', 'Chalkboard SE', 'Comic Neue', sans-serif;
+}
+
+.text-primary {
+    color: $text-primary;
+}
+
+.text-secondary {
+    color: $text-secondary;
+}
+
+.text-tertiary {
+    color: $text-tertiary;
 }
 
 a {
@@ -140,6 +154,10 @@ main {
     justify-content: space-between;
 }
 
+.justify-center {
+    justify-content: center;
+}
+
 .grid {
     display: grid;
 }
@@ -219,6 +237,10 @@ main {
     font-size: 0.8em;
 }
 
+.fw-normal {
+    font-weight: normal;
+}
+
 .fw-bold {
     font-weight: bold;
 }
@@ -233,6 +255,10 @@ main {
 
 .align-center {
     align-self: center;
+}
+
+.vertical-center {
+    vertical-align: middle;
 }
 
 .fixed-bottom {
@@ -367,6 +393,24 @@ input[type=text]:focus {
 
 .chat-entries {
     overflow-y: scroll;
+}
+
+.loading-image {
+    width: 100px;
+    height: 100px;
+    opacity: 0.5;
+    background: url("/static/images/logoborder.svg") center no-repeat;
+    background-size: contain;
+    animation-name: animCircle;
+    animation-duration: 15s;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    display: block;
+}
+
+@keyframes animCircle {
+    to {transform: rotate(360deg); }
+    from {transform: rotate(-360deg); }
 }
 
 @media only screen and (max-width: 828px) {
