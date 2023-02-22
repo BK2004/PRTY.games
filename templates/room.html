@@ -6,12 +6,13 @@
 <script type="text/javascript" charset="utf-8">
     var socket = io();
     const ROOM_CODE = '{{ code }}';
+    var roomStatus = {{ status }};
 </script>
 <script src="/static/scripts/room.js" defer></script>
 {% endblock scripts %}
 {% block body %}
     <div class="display fill background-game flex">
-        <div class="game flex flex-column justify-center text-center fill fill-h">
+        <div class="game flex flex-column justify-around text-center fill fill-h">
             g
         </div>
         <div class="chat background-chat w-50 fill-h flex flex-column justify-between">

@@ -52,8 +52,18 @@ main {
   background-color: #f7d0ff;
 }
 
-.create-button, .join-button {
+.create-button, .join-button, .ready-button {
   border-radius: 5px;
+}
+
+.ready-button {
+  padding: 0.2em 0.5em;
+  cursor: pointer;
+  transition: 0.2s linear all;
+}
+
+.ready-button:hover {
+  box-shadow: 0 0 3px 2px #cccccc;
 }
 
 .color-purple {
@@ -694,6 +704,38 @@ input[type=text]:focus {
   overflow-y: scroll;
 }
 
+.voting-wrap {
+  display: grid;
+  grid-template-rows: 100%;
+  grid-template-columns: 25% 25% 25% 25%;
+}
+
+.game-frame {
+  border-radius: 10px;
+  display: flex;
+  justify-content: space-around;
+  height: min(100%, 212px);
+  aspect-ratio: 1/1;
+  margin: auto;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.game-frame:hover {
+  box-shadow: 0px 0px 6px 4px #cccccc;
+}
+
+.game-frame[data-selected=true] {
+  background-color: #48c0f6;
+  box-shadow: 0px 0px 6px 4px #cccccc;
+}
+
+.game-frame > img {
+  align-self: center;
+  width: 60%;
+  aspect-ratio: 1/1;
+}
+
 .loading-image {
   width: 100px;
   height: 100px;
@@ -715,7 +757,14 @@ input[type=text]:focus {
     transform: rotate(-360deg);
   }
 }
-@media only screen and (max-width: 828px) {
+@media only screen and (max-width: 1160px) {
+  .voting-wrap {
+    grid-template-columns: 50% 50%;
+    grid-template-rows: 50% 50%;
+    height: 100%;
+  }
+}
+@media only screen and (max-width: 800px) {
   .h-25 {
     height: 150px;
   }
