@@ -64,17 +64,49 @@ class Room:
 
     # Empty votes and remove room from dictionary
     def clearVotes(self):
-        if self.roomVotes is not None:
+        if hasattr(self, 'roomVotes'):
             delattr(self, 'roomVotes')
 
     # Add vote from player
     def addVote(self, gamemode, playerId):
-        if self.roomVotes is not None and gamemode in self.roomVotes and playerId not in self.roomVotes[gamemode]:
+        self.removeVote(playerId)
+        if hasattr(self, 'roomVotes') and gamemode in self.roomVotes and playerId not in self.roomVotes[gamemode]:
             self.roomVotes[gamemode].append(playerId)
+            if sum(len(self.roomVotes[key]) for key in self.roomVotes) == self.playerCount:
+                # All players have voted, move on
+                self.startGame()
+
+    def startGame(self):
+        if not hasattr(self, 'roomVotes'):
+            return
+        
+        game = 'Random'
+        for key in self.roomVotes.keys():
+            if len(self.roomVotes[key]) > len(self.roomVotes[game]):
+                game = key
+
+        if game == 'Random':
+            options = self.roomVotes.copy()
+            options.pop('Random')
+            game = list(options)[random.randint(0, 2)]
+        
+        self.selectedGame = game
+
+        self.clearVotes()
+        self.updateStatus(3)
+
+    def isStarted(self):
+        return hasattr(self, 'selectedGame')
+
+    def getGame(self):
+        if not hasattr(self, 'selectedGame'):
+            return None
+
+        return self.selectedGame
 
     # Remove player vote
     def removeVote(self, playerId):
-        if self.roomVotes is None:
+        if not hasattr(self, 'roomVotes') is None:
             return
 
         for mode in self.roomVotes:
@@ -93,6 +125,10 @@ class Room:
         self.playerCount += 1
         self.players.append(playerId)
 
+        if self.playerCount >= 2 and self.getStatus() == 0:
+            self.initReady()
+            self.updateStatus(1)
+
         return True
 
     # Remove player from room
@@ -102,13 +138,15 @@ class Room:
 
         self.playerCount -= 1
         self.players.remove(playerId)
-
+        self.removeVote(playerId)
+        self.unreadyPlayer(playerId)
 
         if self.playerCount == 0:
             self.destroy()
-        elif self.playerCount == 1 and self.getStatus() < 3:
+        elif self.playerCount == 1:
             self.updateStatus(0)
             self.clearVotes()
+            self.clearReady()
 
     def setDestroyCallback(self, destroyCallback):
         self.destroyCallback = destroyCallback
@@ -116,6 +154,50 @@ class Room:
     def destroy(self):
         roomsDB.delete_one({'code': self.roomCode})
         self.destroyCallback()
+    
+    def getVotes(self):
+        if not hasattr(self, 'roomVotes'):
+            return None
+        
+        return {mode: len(self.roomVotes[mode]) for mode in self.roomVotes}
+
+    # Allow players to ready up
+    def initReady(self):
+        if hasattr(self, 'playersReady'):
+            return False
+        
+        self.playersReady = []
+    
+    # Add player to ready list
+    def readyPlayer(self, playerId):
+        if playerId is None or playerId not in self.players or not hasattr(self, 'playersReady') or playerId in self.playersReady:
+            return False
+        
+        self.playersReady.append(playerId)
+        if len(self.playersReady) < self.playerCount:
+            self.updateStatus(2)
+            self.initVotes()
+
+        return True
+    
+    # Remove player from ready list
+    def unreadyPlayer(self, playerId):
+        if playerId is None or playerId not in self.players or not hasattr(self, 'playersReady') or playerId not in self.playersReady:
+            return False
+
+        self.playersReady.remove(playerId)
+        return True
+
+    # Return count of players ready
+    def getReady(self):
+        if not hasattr(self, 'playersReady'):
+            return -1
+
+        return len(self.playersReady)
+
+    def clearReady(self):
+        if hasattr(self, 'playersReady'):
+            delattr(self, 'playersReady')
 
 def genCode():
     return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase) for _ in range(6))

@@ -24,6 +24,7 @@ function socket_initializeEvents() {
 
     socket.on('message recieve', socket_onMessageRecieve);
     socket.on('update', socket_onStatusChange);
+    socket.on('update votes', socket_onVoteUpdate);
 }
 
 function socket_joinRoom() {
@@ -49,10 +50,21 @@ function socket_onMessageRecieve(data) {
     messages.push(newElement);
 }
 
+function socket_onVoteUpdate(data) {
+    Object.keys(data.votes).forEach((key) => {
+        // Set frame to be given mode if not exists
+        if (document.querySelector(`.game-frame[data-type="${key}"]`) === null) {
+            document.querySelector(`.game-frame[data-type=UNDEF]`).dataset.type = key;
+        }
+        document.querySelector(`.game-frame[data-type="${key}"]`).querySelector('.vote-count').innerHTML = `${data.votes[key]} votes`;
+        document.querySelector(`.game-frame[data-type="${key}"]`).querySelector('.frame-header').innerHTML = `${key}`;
+    });
+}
+
 function socket_onStatusChange(data) {
     roomStatus = data.status;
 
-    updateScreen();
+    updateScreen(data);
 }
 
 function initVoting() {
@@ -63,8 +75,14 @@ function initVoting() {
         item.addEventListener("click", (e) => {
             // if item is not selected, change it to the voted game
             if (item.dataset.selected === "false") {
-                document.querySelector('.game-frame[data-selected="true"]').dataset.selected = "false";
+                const currentlySelected = document.querySelector('.game-frame[data-selected="true"]');
+                if (currentlySelected) {
+                    currentlySelected.dataset.selected = "false";
+                }
+
                 item.dataset.selected = "true";
+
+                socket.emit('vote', {'gamemode': item.dataset.type})
             } else {
                 return;
             }
@@ -72,13 +90,19 @@ function initVoting() {
     });
 }
 
-function updateScreen() {
+function initGame(gamemode) {
+    changeScreen(2, {'game': gamemode})
+}
+
+function updateScreen(data={}) {
     if (roomStatus == 0) {
         changeScreen(0, {message: 'Waiting on players...'});
     } else if (roomStatus == 1) {
         changeScreen(0, {message: 'Waiting on players to ready up...', showReady: true});
     } else if (roomStatus == 2) {
         initVoting();
+    } else if (roomStatus == 3) {
+        initGame(data.game);
     }
 }
 
@@ -88,6 +112,11 @@ function changeScreen(screenId, extra) {
             gameContainer.innerHTML = STATUS_TEMPLATE.replace("{message}", extra.message);
             if (extra.showReady) {
                 gameContainer.innerHTML += READY_TEMPLATE;
+
+                // Add button listener
+                document.querySelector(".ready-button").addEventListener('click', (e) => {
+                    socket.emit('ready', {});
+                });
             }
             titleStatus.innerHTML = "";
             break;
@@ -95,37 +124,9 @@ function changeScreen(screenId, extra) {
             gameContainer.innerHTML = VOTING_TEMPLATE;
             titleStatus.innerHTML = "GAME VOTING";
             break;
+        case(2): // Game
+            gameContainer.innerHTML = GAME_TEMPLATE.replaceAll("{game}", extra.game);
+            titleStatus.innerHTML = extra.game.toUpperCase();
+            break;
     }
 }
-
-const STATUS_TEMPLATE = `
-<div>
-    <h1 class="text-tertiary status-message ml-auto mr-auto">{message}</h1>
-    <span class="loading-image mt-5 ml-auto mr-auto"></span>
-</div>
-`;
-
-const READY_TEMPLATE = `
-<button class="ready-button m-auto mt-3 mb-5 text-primary fs-1 background-green">READY</button>
-`
-
-const VOTING_TEMPLATE = `
-<div class="voting-wrap h-25 fill">
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="true" data-type="random">
-        <img src="/static/images/random.svg">
-        <p class="text-primary">0 votes</p>
-    </div>
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="random">
-        <img src="/static/images/random.svg">
-        <p class="text-primary">0 votes</p>
-    </div>
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="random">
-        <img src="/static/images/random.svg">
-        <p class="text-primary">0 votes</p>
-    </div>
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="random">
-        <img src="/static/images/random.svg">
-        <p class="text-primary">0 votes</p>
-    </div>
-</div>
-`;

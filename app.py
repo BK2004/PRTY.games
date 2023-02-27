@@ -14,6 +14,10 @@ rooms = {}
 def routeError(code):
     return redirect("/")
 
+@app.route("/ingame")
+def in_game():
+    return render_template('ingame.html', game=True)
+
 @app.route("/", methods=["POST", "GET"])
 def index():
     checkName()
@@ -46,7 +50,7 @@ def join(code=None):
     
     session['room-code'] = code
     
-    return render_template("room.html", game=True, code=code, username=session['player-name'], status=rooms[code].getStatus())
+    return render_template("room.html", game=True, code=code, username=session['player-name'])
 
 # Changing player names
 @app.route("/updateName", methods=['POST'])
@@ -74,17 +78,36 @@ def room_join(data):
     if data['code'] not in rooms:
         return
         
+    join_room(request.sid)
     join_room(data['code'])
     session['room-code'] = data['code']
     emit('message recieve', {'username': 'SERVER', 'content': session['player-name'] + " has joined the room."}, to=data['code'])
     rooms[data['code']].addPlayer(request.sid)
 
     # If in status 0 and enough players, move to status 1 (Allow players to ready up before voting)
-    if (rooms[data['code']].getStatus() == 0 and rooms[data['code']].playerCount >= 2):
-        rooms[data['code']].updateStatus(1)
+    if rooms[data['code']].getStatus() == 1:
         emit('update', {'status': 1}, to=data['code'])
+    else:
+        # Send game data to player
+        if rooms[data['code']].getStatus() == 3:
+            emit('update', {'status': 3, 'game': rooms[data['code']].getGame()}, to=request.sid)
+        else:
+            emit('update', {'status': rooms[data['code']].getStatus()}, to=request.sid)
 
-        rooms[data['code']].initVotes()
+@socketio.on("ready")
+def ready_up(data):
+    if session.get("room-code") is None or session['room-code'] not in rooms or rooms[session['room-code']].getStatus() != 1:
+        return
+    
+    res = rooms[session['room-code']].readyPlayer(request.sid)
+    if res:
+        # Check if should be changed to voting phase
+        if rooms[session['room-code']].getStatus() == 2:
+            emit('update', {'status': 2}, to=session['room-code'])
+
+            newData = {'votes': rooms[session['room-code']].getVotes()}
+            emit('update votes', newData, to=session['room-code'])
+            
 
 @socketio.on("message send")
 def message_send(data):
@@ -99,12 +122,30 @@ def message_send(data):
 
     emit('message recieve', res, to=session['room-code'])
 
+@socketio.on("vote")
+def socket_vote(data):
+    # Does room exist
+    if session.get('room-code') is None or not session['room-code'] in rooms:
+        return
+
+    if 'gamemode' not in data:
+        return
+
+    rooms[session['room-code']].addVote(data['gamemode'], request.sid)
+
+    # Has game been started
+    if rooms[session['room-code']].isStarted():
+        emit('update', {'status': 3, 'game': rooms[session['room-code']].getGame()}, to=session['room-code'])
+
+    emit('update votes', {'votes': rooms[session['room-code']].getVotes()}, to=session['room-code'])
+
 @socketio.on("disconnect")
 def socket_disconnect():
     # Does room exist
     if session.get('room-code') is None or not session['room-code'] in rooms:
         return
     leave_room(session['room-code'])
+    leave_room(request.sid)
     emit('message recieve', {'username': 'SERVER', 'content': session['player-name'] + " has left the room."}, to=session['room-code'])
 
     # Remove from room count and check if room is vacated
