@@ -35,5 +35,13 @@ const VOTING_TEMPLATE = `
 `;
 
 const GAME_TEMPLATE = `
-hi
+{content}
 `;
+
+const PROMPT_TEMPLATE = `
+<div class="prompt-container">
+    <h1 class="mb-5">{prompt}</h1>
+    <input type="text" class="background-white text-center fs-3 m-auto inset-bs mb-4 block prompt-input w-75 p-6">
+    <button class="prompt-button m-auto mt-3 mb-5 text-primary fs-1 background-purple" data-target="{target}">SUBMIT</button>
+</div>
+`

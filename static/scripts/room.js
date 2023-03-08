@@ -25,6 +25,7 @@ function socket_initializeEvents() {
     socket.on('message recieve', socket_onMessageRecieve);
     socket.on('update', socket_onStatusChange);
     socket.on('update votes', socket_onVoteUpdate);
+    socket.on('wait', socket_onWait);
 }
 
 function socket_joinRoom() {
@@ -61,6 +62,14 @@ function socket_onVoteUpdate(data) {
     });
 }
 
+function socket_onWait() {
+    gameContainer.innerHTML = '<div class="waiting" disabled="true">' + gameContainer.innerHTML + '</div>';
+
+    gameContainer.querySelectorAll('input button').forEach((obj) => {
+        obj.ariaDisabled = true;
+    });
+}
+
 function socket_onStatusChange(data) {
     roomStatus = data.status;
 
@@ -82,16 +91,12 @@ function initVoting() {
 
                 item.dataset.selected = "true";
 
-                socket.emit('vote', {'gamemode': item.dataset.type})
+                socket.emit('vote', {'gamemode': item.dataset.type});
             } else {
                 return;
             }
         });
     });
-}
-
-function initGame(gamemode) {
-    changeScreen(2, {'game': gamemode})
 }
 
 function updateScreen(data={}) {
@@ -102,7 +107,7 @@ function updateScreen(data={}) {
     } else if (roomStatus == 2) {
         initVoting();
     } else if (roomStatus == 3) {
-        initGame(data.game);
+        initGame(data.game, data.gameStatus, 'question' in data ? data.question : "");
     }
 }
 
@@ -127,6 +132,34 @@ function changeScreen(screenId, extra) {
         case(2): // Game
             gameContainer.innerHTML = GAME_TEMPLATE.replaceAll("{game}", extra.game);
             titleStatus.innerHTML = extra.game.toUpperCase();
+
+            var content = "";
+
+            // Switch that checks game type and changes screen based off game status
+            switch (extra.game.toLowerCase().replaceAll(" ", "")) {
+                case 'fillintheblank':
+                    content = getFITBScreen(extra.gameStatus, 'question' in extra ? extra.question : "");
+        
+                    break;
+            }
+
+            gameContainer.innerHTML = gameContainer.innerHTML.replaceAll("{content}", content);
+
+            // Do queries with prompts
+            gameContainer.querySelectorAll('.prompt-container').forEach((obj) => {
+                const submitButton = obj.querySelector('.prompt-button');
+                const promptInput = obj.querySelector('.prompt-input');
+
+                submitButton.addEventListener("click", (e) => {
+                    socket.emit(submitButton.dataset.target, {'content': promptInput.value});
+                });
+            });
+
             break;
     }
+}
+
+// Starts game
+function initGame(gamemode, gameStatus, question="") {
+    changeScreen(2, {'game': gamemode, 'gameStatus': gameStatus, 'question': question});
 }

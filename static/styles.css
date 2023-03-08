@@ -52,17 +52,17 @@ main {
   background-color: #f7d0ff;
 }
 
-.create-button, .join-button, .ready-button {
+.create-button, .join-button, .ready-button, .prompt-button {
   border-radius: 5px;
 }
 
-.ready-button {
+.ready-button, .prompt-button {
   padding: 0.2em 0.5em;
   cursor: pointer;
   transition: 0.2s linear all;
 }
 
-.ready-button:hover {
+.ready-button:hover, .prompt-button:hover {
   box-shadow: 0 0 3px 2px #cccccc;
 }
 
@@ -555,12 +555,12 @@ main {
   border-bottom: 4px solid #046a3e;
 }
 
-.lobby-input, .code-input {
+.lobby-input, .code-input, .prompt-input {
   border-radius: 4px;
   transition: outline 0.1s ease-in-out;
 }
 
-.lobby-input:focus, .code-input:focus {
+.lobby-input:focus, .code-input:focus, .prompt-input:focus {
   outline: 4px solid #de37ff;
 }
 
@@ -651,10 +651,6 @@ tr:nth-child(7n-7) td:first-child {
 .chat {
   grid-template-rows: 90% 10%;
   overflow: hidden;
-}
-
-input[type=text]:focus {
-  outline: none;
 }
 
 .chat-input {
@@ -815,4 +811,7 @@ input[type=text]:focus {
   .w-100 {
     width: 480px;
   }
+}
+.waiting {
+  opacity: 0.3;
 }/*# sourceMappingURL=styles.css.map */

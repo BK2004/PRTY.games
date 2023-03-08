@@ -79,17 +79,17 @@ main {
     background-color: getColor($primary-magenta, 13);
 }
 
-.create-button, .join-button, .ready-button {
+.create-button, .join-button, .ready-button, .prompt-button {
     border-radius: 5px;
 }
 
-.ready-button {
+.ready-button, .prompt-button {
     padding: .2em 0.5em;
     cursor: pointer;
     transition: .2s linear all;
 }
 
-.ready-button:hover {
+.ready-button:hover, .prompt-button:hover {
     box-shadow: 0 0 3px 2px getColor($white, 8);
 }
 
@@ -304,12 +304,12 @@ main {
     border-bottom: 4px solid getColor($primary-green, 8);
 }
 
-.lobby-input, .code-input {
+.lobby-input, .code-input, .prompt-input {
     border-radius: 4px;
     transition: outline 0.1s ease-in-out;
 }
 
-.lobby-input:focus, .code-input:focus {
+.lobby-input:focus, .code-input:focus, .prompt-input:focus {
     outline: 4px solid $primary-magenta;
 }
 
@@ -352,10 +352,6 @@ thead > tr {
 .chat {
     grid-template-rows: 90% 10%;
     overflow: hidden;
-}
-
-input[type=text]:focus {
-    outline: none;
 }
 
 .chat-input {
@@ -470,4 +466,8 @@ input[type=text]:focus {
 
 @media only screen and (max-width: 600px) {
     @include height_width(120px);
+}
+
+.waiting {
+    opacity: 0.3;
 }

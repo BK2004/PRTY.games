@@ -3,13 +3,19 @@ import string
 from pymongo import MongoClient
 import time
 import os
+from flask import request
+from flask_socketio import emit
 
-GAMEMODES = [
-    "Fill in the blank",
-    "Trivia",
-    "Song Guesser",
-    "Wordy"
-]
+STEPS = {
+    'Fill in the blank': [
+        "question",
+        "response",
+        "voting"
+    ],
+    'Trivia': [],
+    'Song Guesser': [],
+    'Wordy': [],
+}
 
 client = MongoClient(os.getenv("MONGODB_URI"))
 
@@ -50,7 +56,7 @@ class Room:
         self.roomVotes = {"Random": []}
 
         # Generate and fill with random modes
-        availableModes = [mode for mode in GAMEMODES]
+        availableModes = list(STEPS.keys())
         for i in range(3):
             rand = random.randint(0, len(availableModes) - 1)
 
@@ -76,6 +82,47 @@ class Room:
                 # All players have voted, move on
                 self.startGame()
 
+    # Try to update player's game status
+    def updatePlayerInGame(self, playerId, content, updateType):
+        if self.getGame() is None:
+            return
+        
+        if not self.playerInRoom(playerId) or updateType is None or content is None:
+            return
+        
+        # Check if updateType is up to date with current game status
+        if not updateType.lower() == STEPS[self.getGame()][self.getGameStatus()]:
+            return
+        
+        if updateType == 'question':
+            if not hasattr(self, 'playerQuestions'):
+                self.playerQuestions = {}
+            
+            self.playerQuestions[request.sid] = content
+
+            if len(self.playerQuestions) == self.playerCount:
+                self.nextPhase()
+
+                return
+        
+        emit('wait', to=request.sid)
+
+    def nextPhase(self):
+        if self.getGameStatus() >= len(STEPS[self.getGame()]) - 1:
+            # End game
+
+            return
+        
+        self.gameStatus += 1
+        newData = {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}
+
+        # Update question if game type is 'response'
+        if STEPS[self.getGame()][self.getGameStatus()] == 'response':
+            newData['question'] = self.playerQuestions.get(list(self.playerQuestions.keys())[0])
+
+        emit('update', newData, to=self.roomCode)
+
+    # Set selected game, update status, change phase
     def startGame(self):
         if not hasattr(self, 'roomVotes'):
             return
@@ -91,13 +138,36 @@ class Room:
             game = list(options)[random.randint(0, 2)]
         
         self.selectedGame = game
+        self.gameStatus = 0
 
         self.clearVotes()
         self.updateStatus(3)
 
+    # Ends game, clears game information
+    def stopGame(self):
+        if not hasattr(self, 'selectedGame'):
+            return
+        
+        delattr(self, 'selectedGame')
+        delattr(self, 'gameStatus')
+        
+        if hasattr(self, 'playerQuestions'):
+            delattr(self, 'playerQuestions')
+        if hasattr(self, 'playerAnswers'):
+            delattr(self, 'playerAnswers')
+
+    # Get current game status
+    def getGameStatus(self):
+        if not hasattr(self, 'gameStatus'):
+            return -1
+        else:
+            return self.gameStatus
+
+    # Has game started
     def isStarted(self):
         return hasattr(self, 'selectedGame')
 
+    # Return gamemode
     def getGame(self):
         if not hasattr(self, 'selectedGame'):
             return None
@@ -147,6 +217,7 @@ class Room:
             self.updateStatus(0)
             self.clearVotes()
             self.clearReady()
+            self.stopGame()
 
     def setDestroyCallback(self, destroyCallback):
         self.destroyCallback = destroyCallback
