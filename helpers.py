@@ -10,7 +10,8 @@ STEPS = {
     'Fill in the blank': [
         "question",
         "response",
-        "voting"
+        "voting",
+        "results"
     ],
     'Trivia': [],
     'Song Guesser': [],
@@ -82,6 +83,74 @@ class Room:
                 # All players have voted, move on
                 self.startGame()
 
+    def removeGameVote(self, playerId):
+        if not hasattr(self, 'gameVotes'):
+            return
+
+        for k in self.gameVotes:
+            for i in range(0, len(self.gameVotes[k])):
+                if self.gameVotes[k][i] == playerId:
+                    del self.gameVotes[k][i]
+
+                    return
+
+    def getGameVotes(self):
+        if not hasattr(self, 'gameVotes'):
+            return
+
+        return {key: len(self.gameVotes[key]) for key in self.gameVotes}
+
+    def addGameVote(self, item, playerId):
+        if not hasattr(self, 'gameVotes') or item not in self.gameVotes:
+            return
+        
+        self.removeGameVote(playerId)
+        self.gameVotes[item][len(self.gameVotes[item])] = playerId
+
+        playerVotes = 0
+        for sid in self.players:
+            for vote in self.gameVotes:
+                for i in range(0, len(self.gameVotes[vote])):
+                    if self.gameVotes[vote][i] == sid:
+                        playerVotes += 1
+
+        if playerVotes == self.playerCount:
+            # Next vote, add to results
+            if not hasattr(self, 'voteResults'):
+                self.voteResults = {}
+
+            if self.currentVote not in self.voteResults:
+                self.voteResults[self.currentVote] = {}
+
+            newData = {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}
+            self.voteResults[self.currentVote] = self.getGameVotes()
+
+            del self.playerResponses[self.currentVote]
+
+            if len(self.playerResponses.keys()) == 0:
+                return self.nextPhase()
+            
+            self.currentVote = list(self.playerResponses.keys())[0]
+            newData['question'] = self.currentVote
+
+            self.gameVotes = {}
+            for response in self.playerResponses[self.currentVote]:
+                self.gameVotes[self.playerResponses[self.currentVote][response]] = {}
+            newData['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
+
+            emit('update', newData, to=self.roomCode)
+
+        emit('update game votes', {'votes': self.getGameVotes()}, to=self.roomCode)
+
+
+    # Check if all players are in a table
+    def allPlayersIn(self, t):
+        for plrSid in self.players:
+            if plrSid not in t:
+                return False
+            
+        return True
+
     # Try to update player's game status
     def updatePlayerInGame(self, playerId, content, updateType):
         if self.getGame() is None:
@@ -97,19 +166,67 @@ class Room:
         if updateType == 'question':
             if not hasattr(self, 'playerQuestions'):
                 self.playerQuestions = {}
+
+            # Check for duplicate question
+            for plrSid in self.playerQuestions:
+                if self.playerQuestions[plrSid] == content:
+                    # TODO: Notify player in game with error
+                    return
             
             self.playerQuestions[request.sid] = content
 
-            if len(self.playerQuestions) == self.playerCount:
+            if self.allPlayersIn(self.playerQuestions):
                 self.nextPhase()
+
+                return
+        elif updateType == 'response':
+            if not hasattr(self, 'playerResponses'):
+                self.playerResponses = {}
+
+            if self.playerQuestions[self.questionKey] not in self.playerResponses:
+                self.playerResponses[self.playerQuestions[self.questionKey]] = {}
+
+            if request.sid in self.playerResponses[self.playerQuestions[self.questionKey]]:
+                return
+
+            # Check for duplicates
+            for plrSid in self.playerResponses[self.playerQuestions[self.questionKey]]:
+                if self.playerResponses[self.playerQuestions[self.questionKey]][plrSid] == content:
+                    # TODO: Notify error
+                    return
+
+            self.playerResponses[self.playerQuestions[self.questionKey]][request.sid] = content
+
+            if self.allPlayersIn(self.playerResponses[self.playerQuestions[self.questionKey]]):
+                self.respondNext()
 
                 return
         
         emit('wait', to=request.sid)
 
+    def respondNext(self):
+        if not hasattr(self, "playerQuestions") or not hasattr(self, "questionKey"):
+            return
+
+        del self.playerQuestions[self.questionKey]
+
+        if len(list(self.playerQuestions.keys())) == 0:
+            # Next phase, all questions answered
+            self.nextPhase()
+
+            return
+
+        newData = {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}
+        self.questionKey = list(self.playerQuestions.keys())[0]
+        newData['question'] = self.playerQuestions[self.questionKey]
+
+        emit('update', newData, to=self.roomCode)
+
+    # Go on to next game phase
     def nextPhase(self):
         if self.getGameStatus() >= len(STEPS[self.getGame()]) - 1:
             # End game
+            self.stopGame()
 
             return
         
@@ -118,9 +235,35 @@ class Room:
 
         # Update question if game type is 'response'
         if STEPS[self.getGame()][self.getGameStatus()] == 'response':
-            newData['question'] = self.playerQuestions.get(list(self.playerQuestions.keys())[0])
+            self.questionKey = list(self.playerQuestions.keys())[0]
+            newData['question'] = self.playerQuestions[self.questionKey]
+        # Send table of responses to vote on
+        elif STEPS[self.getGame()][self.getGameStatus()] == 'voting':
+            self.currentVote = list(self.playerResponses.keys())[0]
+            newData['question'] = self.currentVote
+
+            self.gameVotes = {}
+            for response in self.playerResponses[self.currentVote]:
+                self.gameVotes[self.playerResponses[self.currentVote][response]] = {}
+            newData['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
+        # Send game results and schedule task to end game
+        elif STEPS[self.getGame()][self.getGameStatus()] == 'results':
+            if hasattr(self, 'gameVotes'):
+                self.output = {}
+
+                newData['results'] = self.output
 
         emit('update', newData, to=self.roomCode)
+    
+    # Remove player from current game stats
+    def removeFromGame(self, plrId):
+        if self.getGameStatus() == -1 or not self.playerInRoom(plrId):
+            return
+
+        if STEPS[self.getGame()][self.getGameStatus()] == 'question' and self.allPlayersIn(self.playerQuestions):
+            self.nextPhase()
+        elif STEPS[self.getGame()][self.getGameStatus()] == 'response' and self.allPlayersIn(self.playerResponses[self.playerQuestions[self.questionKey]]):
+            self.respondNext()
 
     # Set selected game, update status, change phase
     def startGame(self):
@@ -155,6 +298,12 @@ class Room:
             delattr(self, 'playerQuestions')
         if hasattr(self, 'playerAnswers'):
             delattr(self, 'playerAnswers')
+        if hasattr(self, 'playerResponses'):
+            delattr(self, 'playerResponses')
+        if hasattr(self, 'questionKey'):
+            delattr(self, 'questionKey')
+
+        self.updateStatus(0)
 
     # Get current game status
     def getGameStatus(self):
@@ -176,7 +325,7 @@ class Room:
 
     # Remove player vote
     def removeVote(self, playerId):
-        if not hasattr(self, 'roomVotes') is None:
+        if not hasattr(self, 'roomVotes'):
             return
 
         for mode in self.roomVotes:
@@ -218,14 +367,19 @@ class Room:
             self.clearVotes()
             self.clearReady()
             self.stopGame()
+        else:
+            self.removeFromGame(playerId)
 
+    # Adds callback when room is destroyed
     def setDestroyCallback(self, destroyCallback):
         self.destroyCallback = destroyCallback
 
+    # Destroys room
     def destroy(self):
         roomsDB.delete_one({'code': self.roomCode})
         self.destroyCallback()
     
+    # Returns map of all modes and their vote counts
     def getVotes(self):
         if not hasattr(self, 'roomVotes'):
             return None

@@ -11,22 +11,22 @@ const READY_TEMPLATE = `
 
 const VOTING_TEMPLATE = `
 <div class="voting-wrap h-25 fill">
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
+    <div class="vote-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
         <p class="text-primary frame-header">Random</p>
         <img src="/static/images/random.svg">
         <p class="text-primary vote-count">0 votes</p>
     </div>
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
+    <div class="vote-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
         <p class="text-primary frame-header">Random</p>
         <img src="/static/images/random.svg">
         <p class="text-primary vote-count">0 votes</p>
     </div>
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
+    <div class="vote-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
         <p class="text-primary frame-header">Random</p>
         <img src="/static/images/random.svg">
         <p class="text-primary vote-count">0 votes</p>
     </div>
-    <div class="game-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
+    <div class="vote-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
         <p class="text-primary frame-header">Random</p>
         <img src="/static/images/random.svg">
         <p class="text-primary vote-count">0 votes</p>
@@ -44,4 +44,43 @@ const PROMPT_TEMPLATE = `
     <input type="text" class="background-white text-center fs-3 m-auto inset-bs mb-4 block prompt-input w-75 p-6">
     <button class="prompt-button m-auto mt-3 mb-5 text-primary fs-1 background-purple" data-target="{target}">SUBMIT</button>
 </div>
-`
+`;
+
+const VOTE_TEMPLATE = `
+<div class="vote-container">
+    <h1 class="mb-5">{prompt}</h1>
+    <div class="response-voting-wrap">
+        {voting-frames}
+    </div>
+</div>
+`;
+
+const GAME_VOTE_TEMPLATE = `
+<div class="game-vote-container">
+    <h1 class="mb-5">{prompt}</h1>
+    <div class="response-voting-wrap">
+        {voting-frames}
+    </div>
+</div>
+`;
+
+const VOTE_FRAME_TEMPLATE = `
+<div class="game-vote-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="{content}">
+    <p class="text-primary frame-header">{content}</p>
+    <p class="text-primary vote-count">{votes} votes</p>
+</div>
+`;
+
+const RESULT_TEMPLATE = `
+<div class="result-container">
+    <h1 class="mb-5">Results</h1>
+    <div class="results-wrap">{result-frames}</div>
+</div>
+`;
+
+const RESULT_FRAME = `
+<div class="result-frame">
+    <p class="text-primary frame-header">{content}</p>
+    <p class="text-primary frame-winner">{most-voted}</p>
+</div>
+`;

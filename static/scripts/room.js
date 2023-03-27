@@ -25,6 +25,7 @@ function socket_initializeEvents() {
     socket.on('message recieve', socket_onMessageRecieve);
     socket.on('update', socket_onStatusChange);
     socket.on('update votes', socket_onVoteUpdate);
+    socket.on('update game votes', socket_onGameVoteUpdate);
     socket.on('wait', socket_onWait);
 }
 
@@ -54,12 +55,18 @@ function socket_onMessageRecieve(data) {
 function socket_onVoteUpdate(data) {
     Object.keys(data.votes).forEach((key) => {
         // Set frame to be given mode if not exists
-        if (document.querySelector(`.game-frame[data-type="${key}"]`) === null) {
-            document.querySelector(`.game-frame[data-type=UNDEF]`).dataset.type = key;
+        if (document.querySelector(`.vote-frame[data-type="${key}"]`) === null) {
+            document.querySelector(`.vote-frame[data-type=UNDEF]`).dataset.type = key;
         }
-        document.querySelector(`.game-frame[data-type="${key}"]`).querySelector('.vote-count').innerHTML = `${data.votes[key]} votes`;
-        document.querySelector(`.game-frame[data-type="${key}"]`).querySelector('.frame-header').innerHTML = `${key}`;
+        document.querySelector(`.vote-frame[data-type="${key}"]`).querySelector('.vote-count').innerHTML = `${data.votes[key]} votes`;
+        document.querySelector(`.vote-frame[data-type="${key}"]`).querySelector('.frame-header').innerHTML = `${key}`;
     });
+}
+
+function socket_onGameVoteUpdate(data) {
+    Object.keys(data.votes).forEach((key) => {
+        document.querySelector(`.game-vote-frame[data-type="${key}"]`).querySelector('.vote-count').innerHTML = `${data.votes[key]} votes`;
+    })
 }
 
 function socket_onWait() {
@@ -78,13 +85,13 @@ function socket_onStatusChange(data) {
 
 function initVoting() {
     changeScreen(1);
-    const votingFrames = document.querySelectorAll('.game-frame');
+    const votingFrames = document.querySelectorAll('.vote-frame');
     votingFrames.forEach((item) => {
         // Click event
         item.addEventListener("click", (e) => {
             // if item is not selected, change it to the voted game
             if (item.dataset.selected === "false") {
-                const currentlySelected = document.querySelector('.game-frame[data-selected="true"]');
+                const currentlySelected = document.querySelector('.vote-frame[data-selected="true"]');
                 if (currentlySelected) {
                     currentlySelected.dataset.selected = "false";
                 }
@@ -99,6 +106,23 @@ function initVoting() {
     });
 }
 
+function connectGameVotes() {
+    document.querySelectorAll('.game-vote-frame').forEach((item) => {
+        item.addEventListener('click', (e) => {
+            if (item.dataset.selected === "false") {
+                const curr = document.querySelector('.game-vote-frame[data-selected="true"]');
+                if (curr) {
+                    curr.dataset.selected = "false";
+                }
+
+                item.dataset.selected = "true";
+
+                socket.emit('game vote', {'item': item.dataset.type});
+            }
+        });
+    });
+}
+
 function updateScreen(data={}) {
     if (roomStatus == 0) {
         changeScreen(0, {message: 'Waiting on players...'});
@@ -107,7 +131,7 @@ function updateScreen(data={}) {
     } else if (roomStatus == 2) {
         initVoting();
     } else if (roomStatus == 3) {
-        initGame(data.game, data.gameStatus, 'question' in data ? data.question : "");
+        initGame(data);
     }
 }
 
@@ -138,7 +162,15 @@ function changeScreen(screenId, extra) {
             // Switch that checks game type and changes screen based off game status
             switch (extra.game.toLowerCase().replaceAll(" ", "")) {
                 case 'fillintheblank':
-                    content = getFITBScreen(extra.gameStatus, 'question' in extra ? extra.question : "");
+                    let data = {}
+                    if ('question' in extra) {
+                        data.question = extra.question;
+                    }
+                    if ('responses' in extra) {
+                        data.responses = extra.responses;
+                    }
+
+                    content = getFITBScreen(extra.gameStatus, data);
         
                     break;
             }
@@ -155,11 +187,13 @@ function changeScreen(screenId, extra) {
                 });
             });
 
+            connectGameVotes();
+
             break;
     }
 }
 
 // Starts game
-function initGame(gamemode, gameStatus, question="") {
-    changeScreen(2, {'game': gamemode, 'gameStatus': gameStatus, 'question': question});
+function initGame(data) {
+    changeScreen(2, data);
 }

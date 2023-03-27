@@ -139,6 +139,17 @@ def socket_vote(data):
 
     emit('update votes', {'votes': rooms[session['room-code']].getVotes()}, to=session['room-code'])
 
+@socketio.on("game vote")
+def socket_game_vote(data):
+    # Does room exist
+    if session.get('room-code') is None or not session['room-code'] in rooms:
+        return
+
+    if 'item' not in data:
+        return
+    
+    rooms[session['room-code']].addGameVote(data['item'], request.sid)
+
 @socketio.on("submit question")
 def submit_question(data={}):
     # Entering questions
@@ -150,6 +161,17 @@ def submit_question(data={}):
         return
     
     rooms[session['room-code']].updatePlayerInGame(request.sid, data['content'], "question")
+
+@socketio.on("submit response")
+def submit_response(data={}):
+    if len(data) == 0 or data.get('content') is None or len(data['content'].strip()) == 0 or len(data['content'].strip()) > 40:
+        return
+
+    # Check if in room
+    if session.get('room-code') is None or not session['room-code'] in rooms:
+        return
+
+    rooms[session['room-code']].updatePlayerInGame(request.sid, data['content'], "response")
 
 @socketio.on("disconnect")
 def socket_disconnect():
