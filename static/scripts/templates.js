@@ -79,8 +79,8 @@ const RESULT_TEMPLATE = `
 `;
 
 const RESULT_FRAME = `
-<div class="result-frame">
-    <p class="text-primary frame-header">{content}</p>
-    <p class="text-primary frame-winner">{most-voted}</p>
+<div class="result-frame background-purple bs p-2">
+    <p class="text-primary frame-header mt-4">{content}</p>
+    <p class="text-primary frame-winner mb-4">{most-voted}</p>
 </div>
 `;

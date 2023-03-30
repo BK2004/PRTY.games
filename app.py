@@ -77,6 +77,11 @@ def test_event(data):
 def room_join(data):
     if data['code'] not in rooms:
         return
+
+    # Check if player is in any other room
+    for room in rooms:
+        if rooms[room].playerInRoom(request.sid):
+            emit('disconnect', to=request.sid)
         
     join_room(request.sid)
     join_room(data['code'])
@@ -186,9 +191,6 @@ def socket_disconnect():
     rooms[session['room-code']].removePlayer(request.sid)
     if rooms.get(session['room-code']) is None:
         return
-
-    if rooms[session['room-code']].playerCount == 1 and rooms[session['room-code']].getStatus() == 0:
-        emit('update', {'status': 0}, to=session['room-code'])
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)

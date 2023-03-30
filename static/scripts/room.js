@@ -13,6 +13,10 @@ $(document).ready(socket.on("connect", function() {
 }));
 
 function socket_initializeEvents() {
+    socket.on("disconnect", () => {
+        window.close();
+    });
+
     // Send and receive messages
     $('.chat-input .input').keydown(function(e) {
         if (e.keyCode === 13 && !e.shiftKey) {
@@ -162,15 +166,7 @@ function changeScreen(screenId, extra) {
             // Switch that checks game type and changes screen based off game status
             switch (extra.game.toLowerCase().replaceAll(" ", "")) {
                 case 'fillintheblank':
-                    let data = {}
-                    if ('question' in extra) {
-                        data.question = extra.question;
-                    }
-                    if ('responses' in extra) {
-                        data.responses = extra.responses;
-                    }
-
-                    content = getFITBScreen(extra.gameStatus, data);
+                    content = getFITBScreen(extra.gameStatus, extra);
         
                     break;
             }

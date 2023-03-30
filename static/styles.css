@@ -728,6 +728,34 @@ tr:nth-child(7n-7) td:first-child {
   transition: all 0.2s;
 }
 
+.result-frame {
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 200px;
+  aspect-ratio: 1/1;
+}
+
+.result-container {
+  overflow-y: scroll;
+}
+
+.result-container::-webkit-scrollbar {
+  height: 18px;
+  width: 15px;
+}
+
+.result-container::-webkit-scrollbar-thumb {
+  background-color: rgba(0, 0, 0, 0.3);
+  border: 4px solid transparent;
+  background-clip: content-box;
+}
+
+.result-container::-webkit-scrollbar-corner {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
 .game-vote-container {
   overflow-y: scroll;
 }

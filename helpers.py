@@ -3,8 +3,9 @@ import string
 from pymongo import MongoClient
 import time
 import os
-from flask import request
+from flask import request, session
 from flask_socketio import emit
+from threading import Timer
 
 STEPS = {
     'Fill in the blank': [
@@ -251,13 +252,26 @@ class Room:
             if hasattr(self, 'gameVotes'):
                 self.output = {}
 
+                for k in self.voteResults:
+                    self.output[k] = ""
+
+                    for resp in self.voteResults[k]:
+                        if self.output[k] == '' or self.voteResults[k][resp] > self.voteResults[k][self.output[k]]:
+                            self.output[k] = resp
+
                 newData['results'] = self.output
 
         emit('update', newData, to=self.roomCode)
+
+        if 'results' in newData:
+            emit('start timer', {'duration': 15}, to=self.roomCode)
+            time.sleep(15)
+        
+            self.stopGame()
     
     # Remove player from current game stats
     def removeFromGame(self, plrId):
-        if self.getGameStatus() == -1 or not self.playerInRoom(plrId):
+        if self.getGameStatus() == -1:
             return
 
         if STEPS[self.getGame()][self.getGameStatus()] == 'question' and self.allPlayersIn(self.playerQuestions):
@@ -302,8 +316,20 @@ class Room:
             delattr(self, 'playerResponses')
         if hasattr(self, 'questionKey'):
             delattr(self, 'questionKey')
+        if hasattr(self, 'output'):
+            delattr(self, 'output')
+        if hasattr(self, 'voteResults'):
+            delattr(self, 'voteResults')
+        if hasattr(self, 'gameVotes'):
+            delattr(self, 'gameVotes')
 
-        self.updateStatus(0)
+        if self.playerCount >= 2:
+            self.updateStatus(1)
+            self.initReady()
+            emit('update', {'status': 1}, to=self.roomCode)
+        else:
+            self.updateStatus(0)
+            emit('update', {'status': 0}, to=self.roomCode)
 
     # Get current game status
     def getGameStatus(self):
@@ -356,7 +382,6 @@ class Room:
             return False
 
         self.playerCount -= 1
-        self.players.remove(playerId)
         self.removeVote(playerId)
         self.unreadyPlayer(playerId)
 
@@ -367,8 +392,13 @@ class Room:
             self.clearVotes()
             self.clearReady()
             self.stopGame()
+
+            if self.getStatus() != 0:
+                emit('update', {'status': 0}, to=session['room-code'])
         else:
             self.removeFromGame(playerId)
+
+        self.players.remove(playerId)
 
     # Adds callback when room is destroyed
     def setDestroyCallback(self, destroyCallback):
@@ -399,7 +429,7 @@ class Room:
             return False
         
         self.playersReady.append(playerId)
-        if len(self.playersReady) < self.playerCount:
+        if len(self.playersReady) >= self.playerCount/2:
             self.updateStatus(2)
             self.initVotes()
 
