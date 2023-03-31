@@ -31,6 +31,7 @@ function socket_initializeEvents() {
     socket.on('update votes', socket_onVoteUpdate);
     socket.on('update game votes', socket_onGameVoteUpdate);
     socket.on('wait', socket_onWait);
+    socket.on('start timer', socket_onTimer);
 }
 
 function socket_joinRoom() {
@@ -85,6 +86,29 @@ function socket_onStatusChange(data) {
     roomStatus = data.status;
 
     updateScreen(data);
+}
+
+function socket_onTimer(data) {
+    const duration = data;
+    const element = document.createElement('div')
+    element.innerHTML = TIMER_TEMPLATE.replaceAll("{timeLeft}", data.duration);
+    gameContainer.appendChild(element);
+    let id = null;
+
+    function i() {
+        const timer = element.querySelector('.timer');
+        if (timer == null) { clearInterval(id); return; }
+
+        const curr = parseInt(timer.innerHTML);
+        if (curr === 0) {
+            gameContainer.removeChild(element);
+            clearInterval(id)
+        } else {
+            timer.innerHTML = curr - 1;
+        }
+    }
+
+    id = setInterval(i, 1000)
 }
 
 function initVoting() {

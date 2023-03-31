@@ -429,6 +429,17 @@ thead > tr {
     transition: all .2s;
 }
 
+.timer {
+    position: absolute;
+    bottom: 50px;
+    left: 50px;
+    background-color: rgba(0, 0, 0, 0);
+    border-radius: 50px;
+    padding: 8px;
+    border: 15px solid $primary-orange;
+    font-size: 3rem;
+}
+
 .result-frame {
     border-radius: 10px;
     display: flex;

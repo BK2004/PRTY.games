@@ -83,6 +83,9 @@ class Room:
             if sum(len(self.roomVotes[key]) for key in self.roomVotes) == self.playerCount:
                 # All players have voted, move on
                 self.startGame()
+            else:
+                emit('update votes', {'votes': self.getVotes()}, to=self.roomCode)
+
 
     def removeGameVote(self, playerId):
         if not hasattr(self, 'gameVotes'):
@@ -300,6 +303,8 @@ class Room:
         self.clearVotes()
         self.updateStatus(3)
 
+        emit('update', {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}, to=self.roomCode)
+
     # Ends game, clears game information
     def stopGame(self):
         if not hasattr(self, 'selectedGame'):
@@ -322,6 +327,8 @@ class Room:
             delattr(self, 'voteResults')
         if hasattr(self, 'gameVotes'):
             delattr(self, 'gameVotes')
+        if hasattr(self, 'playersReady'):
+            delattr(self, 'playersReady')
 
         if self.playerCount >= 2:
             self.updateStatus(1)
@@ -373,6 +380,16 @@ class Room:
         if self.playerCount >= 2 and self.getStatus() == 0:
             self.initReady()
             self.updateStatus(1)
+            emit('update', {'status': 1}, to=self.roomCode)
+        elif self.playerCount >= 2:
+            # in game, send update
+            data = {'status': 2}
+            if self.getGame() is None:
+                data.status = 2
+                data['votes'] = self.getVotes()
+            else:
+                data.status = 3
+                data['game'] = self.getGame()
 
         return True
 
@@ -432,6 +449,10 @@ class Room:
         if len(self.playersReady) >= self.playerCount/2:
             self.updateStatus(2)
             self.initVotes()
+            emit('update', {'status': 2}, to=self.roomCode)
+
+            newData = {'votes': self.getVotes()}
+            emit('update votes', newData, to=self.roomCode)
 
         return True
     

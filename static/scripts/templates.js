@@ -84,3 +84,9 @@ const RESULT_FRAME = `
     <p class="text-primary frame-winner mb-4">{most-voted}</p>
 </div>
 `;
+
+const TIMER_TEMPLATE = `
+<div class="timer">
+    {timeLeft}
+</div>
+`;

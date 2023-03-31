@@ -89,30 +89,12 @@ def room_join(data):
     emit('message recieve', {'username': 'SERVER', 'content': session['player-name'] + " has joined the room."}, to=data['code'])
     rooms[data['code']].addPlayer(request.sid)
 
-    # If in status 0 and enough players, move to status 1 (Allow players to ready up before voting)
-    if rooms[data['code']].getStatus() == 1:
-        emit('update', {'status': 1}, to=data['code'])
-    else:
-        # Send game data to player
-        if rooms[data['code']].getStatus() == 3:
-            emit('update', {'status': 3, 'game': rooms[data['code']].getGame()}, to=request.sid)
-        else:
-            emit('update', {'status': rooms[data['code']].getStatus()}, to=request.sid)
-
 @socketio.on("ready")
 def ready_up(data):
     if session.get("room-code") is None or session['room-code'] not in rooms or rooms[session['room-code']].getStatus() != 1:
         return
     
-    res = rooms[session['room-code']].readyPlayer(request.sid)
-    if res:
-        # Check if should be changed to voting phase
-        if rooms[session['room-code']].getStatus() == 2:
-            emit('update', {'status': 2}, to=session['room-code'])
-
-            newData = {'votes': rooms[session['room-code']].getVotes()}
-            emit('update votes', newData, to=session['room-code'])
-            
+    rooms[session['room-code']].readyPlayer(request.sid)   
 
 @socketio.on("message send")
 def message_send(data):
@@ -137,13 +119,7 @@ def socket_vote(data):
         return
 
     rooms[session['room-code']].addVote(data['gamemode'], request.sid)
-
-    # Has game been started
-    if rooms[session['room-code']].isStarted():
-        emit('update', {'status': 3, 'game': rooms[session['room-code']].getGame(), 'gameStatus': rooms[session['room-code']].getGameStatus()}, to=session['room-code'])
-
-    emit('update votes', {'votes': rooms[session['room-code']].getVotes()}, to=session['room-code'])
-
+    
 @socketio.on("game vote")
 def socket_game_vote(data):
     # Does room exist
