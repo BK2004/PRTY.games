@@ -14,7 +14,7 @@ $(document).ready(socket.on("connect", function() {
 
 function socket_initializeEvents() {
     socket.on("disconnect", () => {
-        window.close();
+        changeScreen(0, {message: "You have been disconnected."})
     });
 
     // Send and receive messages
@@ -100,7 +100,7 @@ function socket_onTimer(data) {
         if (timer == null) { clearInterval(id); return; }
 
         const curr = parseInt(timer.innerHTML);
-        if (curr === 0) {
+        if (curr === 0 && gameContainer.contains(element)) {
             gameContainer.removeChild(element);
             clearInterval(id)
         } else {

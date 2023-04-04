@@ -33,7 +33,6 @@ def index():
         
         return redirect("/room/" + newRoom.roomCode)
     else:        
-        session['room-code'] = None
         return render_template("index.html", username=session['player-name'])
 
 @app.route("/room/<code>", methods=["POST", "GET"])
@@ -47,8 +46,6 @@ def join(code=None):
     queryRes = code in rooms
     if not queryRes:
         return redirect("/")
-    
-    session['room-code'] = code
     
     return render_template("room.html", game=True, code=code, username=session['player-name'])
 
@@ -74,14 +71,9 @@ def test_event(data):
     emit('server message', {'response': 'HI THERE'})'''
 
 @socketio.on("join")
-def room_join(data):
+def room_join(data):    
     if data['code'] not in rooms:
         return
-
-    # Check if player is in any other room
-    for room in rooms:
-        if rooms[room].playerInRoom(request.sid):
-            emit('disconnect', to=request.sid)
         
     join_room(request.sid)
     join_room(data['code'])
@@ -159,6 +151,7 @@ def socket_disconnect():
     # Does room exist
     if session.get('room-code') is None or not session['room-code'] in rooms:
         return
+    
     leave_room(session['room-code'])
     leave_room(request.sid)
     emit('message recieve', {'username': 'SERVER', 'content': session['player-name'] + " has left the room."}, to=session['room-code'])
@@ -166,7 +159,10 @@ def socket_disconnect():
     # Remove from room count and check if room is vacated
     rooms[session['room-code']].removePlayer(request.sid)
     if rooms.get(session['room-code']) is None:
+        session['room-code'] = None
         return
+    
+    session['room-code'] = None
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)

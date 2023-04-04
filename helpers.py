@@ -92,11 +92,10 @@ class Room:
             return
 
         for k in self.gameVotes:
-            for i in range(0, len(self.gameVotes[k])):
-                if self.gameVotes[k][i] == playerId:
-                    del self.gameVotes[k][i]
+            if playerId in self.gameVotes[k]:
+                self.gameVotes[k].remove(playerId)
 
-                    return
+                return
 
     def getGameVotes(self):
         if not hasattr(self, 'gameVotes'):
@@ -114,9 +113,8 @@ class Room:
         playerVotes = 0
         for sid in self.players:
             for vote in self.gameVotes:
-                for i in range(0, len(self.gameVotes[vote])):
-                    if self.gameVotes[vote][i] == sid:
-                        playerVotes += 1
+                if sid in self.gameVotes[vote]:
+                    playerVotes += 1
 
         if playerVotes == self.playerCount:
             # Next vote, add to results
@@ -139,7 +137,7 @@ class Room:
 
             self.gameVotes = {}
             for response in self.playerResponses[self.currentVote]:
-                self.gameVotes[self.playerResponses[self.currentVote][response]] = {}
+                self.gameVotes[self.playerResponses[self.currentVote][response]] = []
             newData['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
 
             emit('update', newData, to=self.roomCode)
@@ -267,10 +265,7 @@ class Room:
         emit('update', newData, to=self.roomCode)
 
         if 'results' in newData:
-            emit('start timer', {'duration': 15}, to=self.roomCode)
-            time.sleep(15)
-        
-            self.stopGame()
+            self.startTimer(15, self.stopGame)
     
     # Remove player from current game stats
     def removeFromGame(self, plrId):
@@ -381,15 +376,27 @@ class Room:
             self.initReady()
             self.updateStatus(1)
             emit('update', {'status': 1}, to=self.roomCode)
+        elif self.getStatus() == 1:
+            emit('update', {'status': 1}, to=request.sid)
         elif self.playerCount >= 2:
             # in game, send update
             data = {'status': 2}
-            if self.getGame() is None:
-                data.status = 2
-                data['votes'] = self.getVotes()
-            else:
-                data.status = 3
+            if self.getStatus() == 3:
+                data['status'] = 3
                 data['game'] = self.getGame()
+                data['gameStatus'] =  self.getGameStatus()
+
+                stat = STEPS[self.getGame()][self.getGameStatus()]
+                if stat == "response":
+                    data['question'] = self.playerQuestions[self.questionKey]
+                elif stat == "voting":
+                    data['question'] = self.currentVote
+                    data['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
+
+                emit('update', data, to=request.sid)
+            else:
+                emit('update', data, to=request.sid)
+                emit('update votes', {'votes': self.getVotes()}, to=request.sid)
 
         return True
 
@@ -401,6 +408,7 @@ class Room:
         self.playerCount -= 1
         self.removeVote(playerId)
         self.unreadyPlayer(playerId)
+        self.players.remove(playerId)
 
         if self.playerCount == 0:
             self.destroy()
@@ -414,8 +422,6 @@ class Room:
                 emit('update', {'status': 0}, to=session['room-code'])
         else:
             self.removeFromGame(playerId)
-
-        self.players.remove(playerId)
 
     # Adds callback when room is destroyed
     def setDestroyCallback(self, destroyCallback):
@@ -474,6 +480,11 @@ class Room:
     def clearReady(self):
         if hasattr(self, 'playersReady'):
             delattr(self, 'playersReady')
+
+    def startTimer(self, duration, callback):
+        emit('start timer', {'duration': duration}, to=self.roomCode)
+        time.sleep(duration)
+        callback()
 
 def genCode():
     return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase) for _ in range(6))
