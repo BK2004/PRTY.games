@@ -108,7 +108,7 @@ class Room:
             return
         
         self.removeGameVote(playerId)
-        self.gameVotes[item][len(self.gameVotes[item])] = playerId
+        self.gameVotes[item].append(playerId)
 
         playerVotes = 0
         for sid in self.players:
@@ -246,7 +246,7 @@ class Room:
 
             self.gameVotes = {}
             for response in self.playerResponses[self.currentVote]:
-                self.gameVotes[self.playerResponses[self.currentVote][response]] = {}
+                self.gameVotes[self.playerResponses[self.currentVote][response]] = []
             newData['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
         # Send game results and schedule task to end game
         elif STEPS[self.getGame()][self.getGameStatus()] == 'results':
@@ -276,6 +276,38 @@ class Room:
             self.nextPhase()
         elif STEPS[self.getGame()][self.getGameStatus()] == 'response' and self.allPlayersIn(self.playerResponses[self.playerQuestions[self.questionKey]]):
             self.respondNext()
+        elif STEPS[self.getGame()][self.getGameStatus()] == 'voting':
+            playerVotes = 0
+            for sid in self.players:
+                for vote in self.gameVotes:
+                    if sid in self.gameVotes[vote]:
+                        playerVotes += 1
+
+            if playerVotes == self.playerCount:
+                # Next vote, add to results
+                if not hasattr(self, 'voteResults'):
+                    self.voteResults = {}
+
+                if self.currentVote not in self.voteResults:
+                    self.voteResults[self.currentVote] = {}
+
+                newData = {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}
+                self.voteResults[self.currentVote] = self.getGameVotes()
+
+                del self.playerResponses[self.currentVote]
+
+                if len(self.playerResponses.keys()) == 0:
+                    return self.nextPhase()
+                
+                self.currentVote = list(self.playerResponses.keys())[0]
+                newData['question'] = self.currentVote
+
+                self.gameVotes = {}
+                for response in self.playerResponses[self.currentVote]:
+                    self.gameVotes[self.playerResponses[self.currentVote][response]] = []
+                newData['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
+
+                emit('update', newData, to=self.roomCode)
 
     # Set selected game, update status, change phase
     def startGame(self):
