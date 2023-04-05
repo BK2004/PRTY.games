@@ -56,6 +56,54 @@ function manageName() {
     });
 }
 
+// Handle lobby browser
+const rightTarget = document.querySelector(".right");
+const leftTarget = document.querySelector(".left");
+const lobbyBrowser = document.querySelector(".browser-holder");
+function handleBrowser() {
+    rightTarget.addEventListener("click", (e) => {
+        const httpRequest = new XMLHttpRequest();
+        httpRequest.open("GET", "/getPublics/" + rightTarget.dataset.target);
+        httpRequest.onload = () => {
+            if (httpRequest.response === "[]") { return; }
+            lobbyBrowser.innerHTML = "";
+            const req = JSON.parse(httpRequest.response);
+            req.forEach(data => {
+                lobbyBrowser.innerHTML += `<tr class="fs-4 w-100">
+                <td class="text-center pt-6 pb-6 w-75"><a href="/room/${data.code}">${data.name}</a></td>
+                <td class="text-center pt-6 pb-6 w-25">${data.playerCount}</td>
+            </tr>`;
+            });
+
+            leftTarget.dataset.target = Math.min(Math.max(parseInt(leftTarget.dataset.target) + 1, 1), parseInt(rightTarget.dataset.target));
+            rightTarget.dataset.target = Math.min(Math.max(parseInt(rightTarget.dataset.target) + 1, 2), parseInt(rightTarget.dataset.target));
+        }
+        httpRequest.send();
+    });
+
+    leftTarget.addEventListener("click", (e) => {
+        const httpRequest = new XMLHttpRequest();
+        httpRequest.open("GET", "/getPublics/" + leftTarget.dataset.target);
+        httpRequest.onload = () => {
+            if (httpRequest.response === "[]") { return; }
+
+            lobbyBrowser.innerHTML = "";
+            const req = JSON.parse(httpRequest.response);
+            req.forEach(data => {
+                lobbyBrowser.innerHTML += `<tr class="fs-4 w-100">
+                <td class="text-center pt-6 pb-6 w-75"><a href="/room/${data.code}">${data.name}</a></td>
+                <td class="text-center pt-6 pb-6 w-25">${data.playerCount}</td>
+            </tr>`;
+            });
+
+            leftTarget.dataset.target = Math.min(Math.max(parseInt(leftTarget.dataset.target) - 1, 1), parseInt(rightTarget.dataset.target));
+            rightTarget.dataset.target = Math.min(Math.max(parseInt(rightTarget.dataset.target) - 1, 2), parseInt(rightTarget.dataset.target));
+        }
+        httpRequest.send();
+    });
+}
+
 manageName();
 handleRadio();
 handleJoinInput();
+handleBrowser();

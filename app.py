@@ -4,6 +4,8 @@ from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
 import time
 
+PAGE_SIZE = 2
+
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
 socketio = SocketIO(app)
@@ -33,7 +35,16 @@ def index():
         
         return redirect("/room/" + newRoom.roomCode)
     else:        
-        return render_template("index.html", username=session['player-name'])
+        return render_template("index.html", username=session['player-name'], lobbies=getLobbyPage(1))
+
+@app.route("/getPublics/<int:pageNumber>")
+def getLobbyPage(pageNumber=1):
+    out = []
+    res = roomsDB.find({"type": "public"}).skip((pageNumber - 1) * PAGE_SIZE).limit(PAGE_SIZE)
+    for doc in res:
+        out.append({"code": doc['code'], "name": doc['name'], "playerCount": rooms[doc['code']].playerCount})
+
+    return out
 
 @app.route("/room/<code>", methods=["POST", "GET"])
 def join(code=None):

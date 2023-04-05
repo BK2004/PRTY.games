@@ -47,6 +47,11 @@ main {
   height: calc(100% - 375px);
 }
 
+.browser-target {
+  padding: 5px;
+  cursor: pointer;
+}
+
 .create, .join {
   border-radius: 15px;
   background-color: #f7d0ff;

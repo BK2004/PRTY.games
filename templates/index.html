@@ -36,19 +36,19 @@
                 <th class="w-25 pb-6 pt-6"># Players</th>
             </tr>
         </thead>
-        <tbody class="w-100">
+        <tbody class="w-100 browser-holder">
+            {% for d in lobbies %}
             <tr class="fs-4 w-100">
-                <td class="text-center pt-6 pb-6 w-75"><a href="/room/jHyWfx">Big wonderful test lobby</a></td>
-                <td class="text-center pt-6 pb-6 w-25">6</td>
+                <td class="text-center pt-6 pb-6 w-75"><a href="/room/{{ d.code }}">{{ d.name }}</a></td>
+                <td class="text-center pt-6 pb-6 w-25">{{ d.playerCount }}</td>
             </tr>
+            {% endfor %}
         </tbody>
     </table>
     <div class="page-nav flex m-auto w-25 fs-3 pb-6 background-transparent">
-        <a href="" class="fs-4"><<</a>
-        <a href="" class="fs-4"><</a>
+        <button class="fs-4 browser-target left" data-target="1"><</button>
         <p>1</p>
-        <a href="" class="fs-4">></a>
-        <a href="" class="fs-4">>></a>
+        <button class="fs-4 browser-target right" data-target="2">></button>
     </div>
 </div>
 {% endblock body %}
