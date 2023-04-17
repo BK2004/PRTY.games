@@ -75,8 +75,10 @@ function handleBrowser() {
             </tr>`;
             });
 
-            leftTarget.dataset.target = Math.min(Math.max(parseInt(leftTarget.dataset.target) + 1, 1), parseInt(rightTarget.dataset.target));
-            rightTarget.dataset.target = Math.min(Math.max(parseInt(rightTarget.dataset.target) + 1, 2), parseInt(rightTarget.dataset.target));
+            if (lobbyBrowser.innerHTML !== "") {
+                leftTarget.dataset.target = Math.min(Math.max(parseInt(leftTarget.dataset.target) + 1, 1), parseInt(rightTarget.dataset.target));
+                rightTarget.dataset.target = Math.min(Math.max(parseInt(rightTarget.dataset.target) + 1, 2), parseInt(rightTarget.dataset.target));
+            }
         }
         httpRequest.send();
     });

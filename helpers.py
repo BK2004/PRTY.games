@@ -6,6 +6,7 @@ import os
 from flask import request, session
 from flask_socketio import emit
 from threading import Timer
+from words import isWord
 
 STEPS = {
     'Fill in the blank': [
@@ -14,9 +15,11 @@ STEPS = {
         "voting",
         "results"
     ],
-    'Trivia': [],
     'Song Guesser': [],
-    'Wordy': [],
+    'Wordy': [
+        "live-response",
+        "results"
+    ],
 }
 
 client = MongoClient(os.getenv("MONGODB_URI"))
@@ -37,6 +40,7 @@ class Room:
         self.status = 0
         self.lastStatusUpdate = time.time()
         self.players = []
+        self.playerNames = {}
         self.playerCount = 0
 
         roomsDB.insert_one({"code": self.roomCode, "type": roomType, "name": lobbyName})
@@ -261,11 +265,116 @@ class Room:
                             self.output[k] = resp
 
                 newData['results'] = self.output
+            if hasattr(self, 'playersRemaining'):
+                self.output = self.playerNames[self.playersRemaining[0]]
+                newData['results'] = self.output
+        elif STEPS[self.getGame()][self.getGameStatus()] == 'live-response':
+            self.playersRemaining = [plr for plr in self.players]
+            self.lastResponse = random.choice(string.ascii_lowercase)
+            self.currPlayer = 0
+            self.turnCount = 0
+            self.wordsUsed = []
+            newData['current'] = self.playerNames[self.playersRemaining[0]]
+            newData['prompt'] = "Enter a word starting with " + self.lastResponse
+            newData['response'] = ''
+
+            for player in self.players:
+                if player != self.playersRemaining[0]:
+                    emit('update', newData, to=player)
+                else:
+                    data = {}
+                    for k in newData:
+                        data[k] = newData[k]
+
+                    data['responding'] = True
+                    emit('update', data, to=player)
+
+            return
 
         emit('update', newData, to=self.roomCode)
 
         if 'results' in newData:
             self.startTimer(15, self.stopGame)
+
+    # Next live phase player
+    def nextLiveResponse(self, plr, response, elim=False, ignoreWord=False):
+        if self.getGame() is None or plr is None or not hasattr(self, "currPlayer") or plr != self.playersRemaining[self.currPlayer]:
+            return
+
+        # Make sure response first letter starts with last letter of currResponse if game is Wordy
+        if self.getGame() == "Wordy":
+            if response.lower()[0] != self.lastResponse[len(self.lastResponse) - 1] or response.lower() in self.wordsUsed or not (ignoreWord or isWord(response)):
+                return
+
+        data = {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}
+
+        self.turnCount += 1
+        
+        if not elim:
+            self.currPlayer = (self.currPlayer + 1) % len(self.playersRemaining)
+        else:
+            self.playersRemaining.remove(self.playersRemaining[self.currPlayer])
+
+            if len(self.playersRemaining) == 1:
+                return self.nextPhase()
+
+        self.lastResponse = response.lower()
+
+        data['current'] = self.playerNames[self.playersRemaining[self.currPlayer]]
+        data['prompt'] = "Enter a word starting with " + response[len(response) - 1].lower()
+        data['response'] = ''
+
+        if not ignoreWord:
+            self.wordsUsed.append(response.lower())
+
+        for plr in self.players:
+            if plr != self.playersRemaining[self.currPlayer]:
+                emit('update', data, to=plr)
+
+        newData = {}
+        for k in data:
+            newData[k] = data[k]
+            newData['responding'] = True
+
+        emit('update', newData, to=self.playersRemaining[self.currPlayer])
+
+        self.liveResponseTimeout(self.playersRemaining[self.currPlayer])
+
+    # Wait ten seconds and try to remove
+    def liveResponseTimeout(self, plr):
+        curr = self.turnCount
+
+        self.startTimer(10)
+
+        if self.turnCount == curr:
+            self.nextLiveResponse(plr, self.lastResponse[len(self.lastResponse) - 1] + random.choice(string.ascii_lowercase), True, True)
+
+    # Remove player from live response
+    def removeFromLiveResponse(self, plr):
+        if self.getGame() is None or self.getGameType() != "live-response":
+            return
+
+        if plr == self.playersRemaining[self.currPlayer]:
+            self.nextLiveResponse(plr, self.lastResponse[len(self.lastResponse) - 1] + random.choice(string.ascii_lowercase), True)
+        elif plr in self.playersRemaining:
+            i = self.playersRemaining.index(plr)
+            if i < self.currPlayer:
+                i -= 1
+                self.playersRemaining.remove(plr)
+
+                if len(self.playersRemaining) == 1:
+                    self.nextPhase()
+    
+    # Update live response text
+    def updateLiveResponse(self, response):
+        if self.getGame() is None or self.getGameType() != "live-response" or request.sid != self.playersRemaining[self.currPlayer]:
+            return
+
+        self.response = response
+
+        for plrId in self.players:
+            if plrId != self.playersRemaining[self.currPlayer]:
+                emit('update', {'prompt': "Enter a word starting with " + self.lastResponse[len(self.lastResponse) - 1], 'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus(), 'current': self.playerNames[self.players[self.currPlayer]], 'response': response}, to=plrId)
     
     # Remove player from current game stats
     def removeFromGame(self, plrId):
@@ -308,6 +417,8 @@ class Room:
                 newData['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
 
                 emit('update', newData, to=self.roomCode)
+        elif self.getGameType() == 'live-response':
+            self.removeFromLiveResponse(plrId)
 
     # Set selected game, update status, change phase
     def startGame(self):
@@ -325,12 +436,12 @@ class Room:
             game = list(options)[random.randint(0, 2)]
         
         self.selectedGame = game
-        self.gameStatus = 0
+        self.gameStatus = -1
 
         self.clearVotes()
         self.updateStatus(3)
 
-        emit('update', {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}, to=self.roomCode)
+        return self.nextPhase()
 
     # Ends game, clears game information
     def stopGame(self):
@@ -356,6 +467,16 @@ class Room:
             delattr(self, 'gameVotes')
         if hasattr(self, 'playersReady'):
             delattr(self, 'playersReady')
+        if hasattr(self, 'playersRemaining'):
+            delattr(self, 'playersRemaining')
+        if hasattr(self, 'turnCount'):
+            delattr(self, 'turnCount')
+        if hasattr(self, 'currPlayer'):
+            delattr(self, 'currPlayer')
+        if hasattr(self, 'wordsUsed'):
+            delattr(self, 'wordsUsed')
+        if hasattr(self, 'response'):
+            delattr(self, 'response')
 
         if self.playerCount >= 2:
             self.updateStatus(1)
@@ -371,6 +492,12 @@ class Room:
             return -1
         else:
             return self.gameStatus
+
+    # Get game type
+    def getGameType(self):
+        if self.getGameStatus() == -1:
+            return
+        return STEPS[self.getGame()][self.getGameStatus()]
 
     # Has game started
     def isStarted(self):
@@ -403,6 +530,7 @@ class Room:
         
         self.playerCount += 1
         self.players.append(playerId)
+        self.playerNames[playerId] = session['player-name']
 
         if self.playerCount >= 2 and self.getStatus() == 0:
             self.initReady()
@@ -424,6 +552,9 @@ class Room:
                 elif stat == "voting":
                     data['question'] = self.currentVote
                     data['responses'] = {key: len(self.gameVotes[key]) for key in self.gameVotes}
+                elif stat == 'live-response':
+                    data['response'] = self.response
+                    data['prompt'] = "Enter a word starting with " + self.lastResponse[len(self.lastResponse) - 1]
 
                 emit('update', data, to=request.sid)
             else:
@@ -454,6 +585,8 @@ class Room:
                 emit('update', {'status': 0}, to=session['room-code'])
         else:
             self.removeFromGame(playerId)
+
+        self.playerNames[session['player-name']] = None
 
     # Adds callback when room is destroyed
     def setDestroyCallback(self, destroyCallback):
@@ -513,10 +646,11 @@ class Room:
         if hasattr(self, 'playersReady'):
             delattr(self, 'playersReady')
 
-    def startTimer(self, duration, callback):
+    def startTimer(self, duration, callback=None):
         emit('start timer', {'duration': duration}, to=self.roomCode)
         time.sleep(duration)
-        callback()
+        if callback is not None:
+            callback()
 
 def genCode():
     return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase) for _ in range(6))

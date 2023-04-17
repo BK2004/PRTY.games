@@ -3,8 +3,9 @@ from flask import Flask, render_template, redirect, request, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
 import time
+from words import isWord
 
-PAGE_SIZE = 2
+PAGE_SIZE = 5
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY")
@@ -156,6 +157,28 @@ def submit_response(data={}):
         return
 
     rooms[session['room-code']].updatePlayerInGame(request.sid, data['content'], "response")
+
+@socketio.on("submit live response")
+def submit_live_response(data={}):
+    if len(data) == 0 or data.get('content') is None or len(data['content'].strip()) == 0 or len(data['content'].strip()) > 20:
+        return
+
+    # Check if in room
+    if session.get("room-code") is None or not session['room-code'] in rooms:
+        return
+    
+    rooms[session['room-code']].nextLiveResponse(request.sid, data.get("content"))
+
+@socketio.on("update live response")
+def update_live_response(data={}):
+    if len(data) == 0 or data.get('content') is None or len(data['content'].strip()) > 20:
+        return
+
+    # Check if in room
+    if session.get("room-code") is None or not session['room-code'] in rooms:
+        return
+
+    rooms[session['room-code']].updateLiveResponse(data.get("content"))
 
 @socketio.on("disconnect")
 def socket_disconnect():

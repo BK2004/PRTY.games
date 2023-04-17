@@ -46,6 +46,22 @@ const PROMPT_TEMPLATE = `
 </div>
 `;
 
+const LIVE_PROMPT_TEMPLATE = `
+<div class="prompt-container">
+    <h1 class="mb-5">{prompt}</h1>
+    <input type="text" class="live-response background-white text-center fs-3 m-auto inset-bs mb-4 block prompt-input w-75 p-6">
+    <button class="prompt-button m-auto mt-3 mb-5 text-primary fs-1 background-purple" data-target="{target}">SUBMIT</button>
+</div>
+`;
+
+const RESPONSE_UPDATE_TEMPLATE = `
+<div class="response-update-container">
+    <h1 class="mb-5">{prompt}</h1>
+    <p class="background-white text-center fs-3 m-auto mb-4 block w-75">{response}</p>
+    <h2 class="mt-3"><span class="color-purple">{player}</span> is going!</h2>
+</div>
+`
+
 const VOTE_TEMPLATE = `
 <div class="vote-container">
     <h1 class="mb-5">{prompt}</h1>
@@ -82,6 +98,12 @@ const RESULT_FRAME = `
 <div class="result-frame background-purple bs p-2">
     <p class="text-primary frame-header mt-4">{content}</p>
     <p class="text-primary frame-winner mb-4">{most-voted}</p>
+</div>
+`;
+
+const WINNER_FRAME = `
+<div class="result-frame background-purple bs p-3">
+    <h1 class="text-primary m-auto"><strong>{player}</strong> has won!</h1>
 </div>
 `;
 

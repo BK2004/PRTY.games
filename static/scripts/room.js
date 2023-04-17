@@ -90,6 +90,10 @@ function socket_onStatusChange(data) {
 
 function socket_onTimer(data) {
     const duration = data;
+    if (gameContainer.querySelector("div > .timer") !== null) {
+        gameContainer.querySelector("div > .timer").parentElement.innerHTML = TIMER_TEMPLATE.replaceAll("{timeLeft}", data.duration);
+        return;
+    }
     const element = document.createElement('div')
     element.innerHTML = TIMER_TEMPLATE.replaceAll("{timeLeft}", data.duration);
     gameContainer.appendChild(element);
@@ -193,6 +197,10 @@ function changeScreen(screenId, extra) {
                     content = getFITBScreen(extra.gameStatus, extra);
         
                     break;
+                case 'wordy':
+                    content = getWordyScreen(extra.gameStatus, extra);
+
+                    break;
             }
 
             gameContainer.innerHTML = gameContainer.innerHTML.replaceAll("{content}", content);
@@ -204,6 +212,13 @@ function changeScreen(screenId, extra) {
 
                 submitButton.addEventListener("click", (e) => {
                     socket.emit(submitButton.dataset.target, {'content': promptInput.value});
+                });
+            });
+
+            // Update response live
+            gameContainer.querySelectorAll('.live-response').forEach((obj) => {
+                obj.addEventListener('input', () => {
+                    socket.emit('update live response', {'content': obj.value});
                 });
             });
 
