@@ -32,6 +32,7 @@ function socket_initializeEvents() {
     socket.on('update game votes', socket_onGameVoteUpdate);
     socket.on('wait', socket_onWait);
     socket.on('start timer', socket_onTimer);
+    socket.on('notify', socket_onNotify);
 }
 
 function socket_joinRoom() {
@@ -153,6 +154,21 @@ function connectGameVotes() {
             }
         });
     });
+}
+
+function socket_onNotify(data={}) {
+    if (data.message === null) {
+        return;
+    }
+
+    const element = document.createElement("span");
+    element.classList.add("notification");
+    element.innerHTML = data.message;
+    document.querySelector('body').appendChild(element);
+
+    setTimeout(() => {
+        document.querySelector('body').removeChild(element);
+    }, 5000)
 }
 
 function updateScreen(data={}) {

@@ -707,8 +707,9 @@ tr:nth-child(7n-7) td:first-child {
 
 .voting-wrap {
   display: grid;
+  margin: auto;
   grid-template-rows: 100%;
-  grid-template-columns: 25% 25% 25% 25%;
+  grid-template-columns: 33% 33% 33%;
 }
 
 .vote-frame {
@@ -804,6 +805,20 @@ tr:nth-child(7n-7) td:first-child {
   align-self: center;
   width: 60%;
   aspect-ratio: 1/1;
+}
+
+.notification {
+  position: absolute;
+  top: 85px;
+  left: 10px;
+  text-align: center;
+  vertical-align: middle;
+  max-width: 250px;
+  padding: 10px;
+  background-color: #fbc6a9;
+  opacity: 0.8;
+  color: #f78647;
+  border-radius: 10px;
 }
 
 .loading-image {

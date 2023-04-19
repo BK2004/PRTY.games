@@ -26,11 +26,6 @@ const VOTING_TEMPLATE = `
         <img src="/static/images/random.svg">
         <p class="text-primary vote-count">0 votes</p>
     </div>
-    <div class="vote-frame fill-h bs background-purple flex flex-column" data-selected="false" data-type="UNDEF">
-        <p class="text-primary frame-header">Random</p>
-        <img src="/static/images/random.svg">
-        <p class="text-primary vote-count">0 votes</p>
-    </div>
 </div>
 `;
 

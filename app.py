@@ -138,36 +138,36 @@ def socket_game_vote(data):
 @socketio.on("submit question")
 def submit_question(data={}):
     # Entering questions
-    if len(data) == 0 or data.get('content') is None or len(data['content'].strip()) <= 5 or len(data['content'].strip()) > 40:
+    if data.get('content') is None:
         return
     
     # Check if in room
     if session.get('room-code') is None or not session['room-code'] in rooms:
         return
     
-    rooms[session['room-code']].updatePlayerInGame(request.sid, data['content'], "question")
+    rooms[session['room-code']].updatePlayerInGame(request.sid, data['content'].strip(), "question")
 
 @socketio.on("submit response")
 def submit_response(data={}):
-    if len(data) == 0 or data.get('content') is None or len(data['content'].strip()) == 0 or len(data['content'].strip()) > 40:
+    if data.get('content') is None:
         return
 
     # Check if in room
     if session.get('room-code') is None or not session['room-code'] in rooms:
         return
 
-    rooms[session['room-code']].updatePlayerInGame(request.sid, data['content'], "response")
+    rooms[session['room-code']].updatePlayerInGame(request.sid, data['content'].strip(), "response")
 
 @socketio.on("submit live response")
 def submit_live_response(data={}):
-    if len(data) == 0 or data.get('content') is None or len(data['content'].strip()) == 0 or len(data['content'].strip()) > 20:
-        return
+    if data.get('content') is None:
+        return 
 
     # Check if in room
     if session.get("room-code") is None or not session['room-code'] in rooms:
         return
     
-    rooms[session['room-code']].nextLiveResponse(request.sid, data.get("content"))
+    rooms[session['room-code']].nextLiveResponse(request.sid, data.get("content").strip())
 
 @socketio.on("update live response")
 def update_live_response(data={}):

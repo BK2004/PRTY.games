@@ -408,8 +408,9 @@ thead > tr {
 
 .voting-wrap {
     display: grid;
+    margin: auto;
     grid-template-rows: 100%;
-    grid-template-columns: 25% 25% 25% 25%;
+    grid-template-columns: 33% 33% 33%;
 }
 
 .vote-frame {
@@ -505,6 +506,20 @@ thead > tr {
     align-self: center;
     width: 60%;
     aspect-ratio: 1/1;
+}
+
+.notification {
+    position: absolute;
+    top: 85px;
+    left: 10px;
+    text-align: center;
+    vertical-align: middle;
+    max-width: 250px;
+    padding: 10px;
+    background-color: getColor($primary-orange, 12);
+    opacity: 0.8;
+    color: $primary-orange;
+    border-radius: 10px;
 }
 
 .loading-image {

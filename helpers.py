@@ -15,7 +15,6 @@ STEPS = {
         "voting",
         "results"
     ],
-    'Song Guesser': [],
     'Wordy': [
         "live-response",
         "results"
@@ -63,7 +62,7 @@ class Room:
 
         # Generate and fill with random modes
         availableModes = list(STEPS.keys())
-        for i in range(3):
+        for i in range(2):
             rand = random.randint(0, len(availableModes) - 1)
 
             self.roomVotes[availableModes[rand]] = []
@@ -170,14 +169,17 @@ class Room:
             return
         
         if updateType == 'question':
+            # Check length
+            if len(content) < 5 or len(content) > 40:
+                return self.notify("Outside of character range. (5 < length <= 40)")
+
             if not hasattr(self, 'playerQuestions'):
                 self.playerQuestions = {}
 
             # Check for duplicate question
             for plrSid in self.playerQuestions:
                 if self.playerQuestions[plrSid] == content:
-                    # TODO: Notify player in game with error
-                    return
+                    return self.notify('Question already inputted.', roomId=playerId)
             
             self.playerQuestions[request.sid] = content
 
@@ -186,6 +188,8 @@ class Room:
 
                 return
         elif updateType == 'response':
+            if len(content) <= 0 or len(content) > 200:
+                return self.notify("Outside character range. (0 < length <= 200)")
             if not hasattr(self, 'playerResponses'):
                 self.playerResponses = {}
 
@@ -193,13 +197,13 @@ class Room:
                 self.playerResponses[self.playerQuestions[self.questionKey]] = {}
 
             if request.sid in self.playerResponses[self.playerQuestions[self.questionKey]]:
-                return
+                return self.notify('Response already submitted.', roomId=playerId)
 
             # Check for duplicates
             for plrSid in self.playerResponses[self.playerQuestions[self.questionKey]]:
                 if self.playerResponses[self.playerQuestions[self.questionKey]][plrSid] == content:
                     # TODO: Notify error
-                    return
+                    return self.notify('Somebody already used this response.', roomId=playerId)
 
             self.playerResponses[self.playerQuestions[self.questionKey]][request.sid] = content
 
@@ -298,13 +302,20 @@ class Room:
 
     # Next live phase player
     def nextLiveResponse(self, plr, response, elim=False, ignoreWord=False):
+        if  len(response) == 0 or len(response) > 20:
+            return self.notify("Response outside of character range (0 < length <= 20)")
+        
         if self.getGame() is None or plr is None or not hasattr(self, "currPlayer") or plr != self.playersRemaining[self.currPlayer]:
             return
 
         # Make sure response first letter starts with last letter of currResponse if game is Wordy
         if self.getGame() == "Wordy":
-            if response.lower()[0] != self.lastResponse[len(self.lastResponse) - 1] or response.lower() in self.wordsUsed or not (ignoreWord or isWord(response)):
-                return
+            if response.lower()[0] != self.lastResponse[len(self.lastResponse) - 1]:
+                return self.notify("Response invalid. (Must start with letter of last word.)", roomId=plr)
+            elif response.lower() in self.wordsUsed:
+                return self.notify("Word already used!", roomId=plr)
+            elif not (ignoreWord or isWord(response)):
+                return self.notify("Not a word!", roomId=plr)
 
         data = {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}
 
@@ -314,6 +325,8 @@ class Room:
             self.currPlayer = (self.currPlayer + 1) % len(self.playersRemaining)
         else:
             self.playersRemaining.remove(self.playersRemaining[self.currPlayer])
+
+            self.notify("You have been eliminated!", plr)
 
             if len(self.playersRemaining) == 1:
                 return self.nextPhase()
@@ -344,7 +357,7 @@ class Room:
     def liveResponseTimeout(self, plr):
         curr = self.turnCount
 
-        self.startTimer(10)
+        self.startTimer(5)
 
         if self.turnCount == curr:
             self.nextLiveResponse(plr, self.lastResponse[len(self.lastResponse) - 1] + random.choice(string.ascii_lowercase), True, True)
@@ -651,6 +664,12 @@ class Room:
         time.sleep(duration)
         if callback is not None:
             callback()
+
+    def notify(self, message, roomId=None):
+        if roomId is None:
+            roomId = self.roomCode
+        
+        emit('notify', {'message': message}, to=roomId)
 
 def genCode():
     return ''.join(random.choice(string.ascii_uppercase + string.ascii_lowercase) for _ in range(6))
