@@ -226,6 +226,15 @@ function changeScreen(screenId, extra) {
                 const submitButton = obj.querySelector('.prompt-button');
                 const promptInput = obj.querySelector('.prompt-input');
 
+                promptInput.focus();
+
+                promptInput.addEventListener("keypress", (e) => {
+                    if (e.keyCode === 13) {
+                        // Enter
+                    socket.emit(submitButton.dataset.target, {'content': promptInput.value});
+                    }
+                });
+
                 submitButton.addEventListener("click", (e) => {
                     socket.emit(submitButton.dataset.target, {'content': promptInput.value});
                 });
