@@ -3,6 +3,7 @@ from flask import Flask, render_template, redirect, request, session
 from flask_socketio import SocketIO, emit, join_room, leave_room
 import os
 import time
+import re
 from words import isWord
 
 PAGE_SIZE = 5
@@ -167,7 +168,7 @@ def submit_live_response(data={}):
     if session.get("room-code") is None or not session['room-code'] in rooms:
         return
     
-    rooms[session['room-code']].nextLiveResponse(request.sid, data.get("content").strip())
+    rooms[session['room-code']].nextLiveResponse(request.sid, re.sub(r'\W+', "", data.get("content").strip()))
 
 @socketio.on("update live response")
 def update_live_response(data={}):
