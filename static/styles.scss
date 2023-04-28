@@ -535,6 +535,25 @@ thead > tr {
     display: block;
 }
 
+.player-list {
+    position: absolute;
+    top: 75px;
+    left: 0;
+    width: 150px;
+}
+
+.player-frame {
+    position: relative;
+}
+
+.player-frame:nth-child(2n) {
+    background-color: getColor($white, 9);
+}
+
+.player-frame:nth-child(2n + 1) {
+    background-color: getColor($white, 8);
+}
+
 @keyframes animCircle {
     to {transform: rotate(360deg); }
     from {transform: rotate(-360deg); }

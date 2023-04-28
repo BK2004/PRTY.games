@@ -243,10 +243,16 @@ class Room:
         self.gameStatus += 1
         newData = {'status': 3, 'game': self.getGame(), 'gameStatus': self.getGameStatus()}
 
+        self.turnCount += 1
+
+        waitTime = 20
+
         # Update question if game type is 'response'
         if STEPS[self.getGame()][self.getGameStatus()] == 'response':
             self.questionKey = list(self.playerQuestions.keys())[0]
             newData['question'] = self.playerQuestions[self.questionKey]
+
+            waitTime = 45
         # Send table of responses to vote on
         elif STEPS[self.getGame()][self.getGameStatus()] == 'voting':
             self.currentVote = list(self.playerResponses.keys())[0]
@@ -276,7 +282,6 @@ class Room:
             self.playersRemaining = [plr for plr in self.players]
             self.lastResponse = random.choice(string.ascii_lowercase)
             self.currPlayer = 0
-            self.turnCount = 0
             self.wordsUsed = []
             newData['current'] = self.playerNames[self.playersRemaining[0]]
             newData['prompt'] = "Enter a word starting with " + self.lastResponse
@@ -299,6 +304,15 @@ class Room:
 
         if 'results' in newData:
             self.startTimer(15, self.stopGame)
+        else:
+            self.timeoutNextPhase(waitTime)
+
+    def timeoutNextPhase(self, sleepTime):
+        currTurn = self.turnCount
+
+        self.startTimer(sleepTime)
+        if currTurn == self.turnCount:
+            self.nextPhase()
 
     # Next live phase player
     def nextLiveResponse(self, plr, response, elim=False, ignoreWord=False):
@@ -454,6 +468,8 @@ class Room:
         self.clearVotes()
         self.updateStatus(3)
 
+        self.turnCount = 0
+
         return self.nextPhase()
 
     # Ends game, clears game information
@@ -574,6 +590,8 @@ class Room:
                 emit('update', data, to=request.sid)
                 emit('update votes', {'votes': self.getVotes()}, to=request.sid)
 
+        emit('update players', {'players': [self.playerNames[n] for n in self.playerNames]}, to=self.roomCode)
+        
         return True
 
     # Remove player from room
@@ -599,7 +617,9 @@ class Room:
         else:
             self.removeFromGame(playerId)
 
-        self.playerNames[session['player-name']] = None
+        del self.playerNames[playerId]
+
+        emit('update players', {'players': [self.playerNames[n] for n in self.playerNames]}, to=self.roomCode)
 
     # Adds callback when room is destroyed
     def setDestroyCallback(self, destroyCallback):

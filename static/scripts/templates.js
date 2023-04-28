@@ -107,3 +107,9 @@ const TIMER_TEMPLATE = `
     {timeLeft}
 </div>
 `;
+
+const PLAYER_TEMPLATE = `
+<div class="player-frame">
+    <p class="frame-name fill m-auto text-center pb-5 pt-5">{name}</p>
+</div>
+`;

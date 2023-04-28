@@ -2,6 +2,7 @@ var messages = [];
 
 const gameContainer = document.querySelector('.game');
 const titleStatus = document.querySelector('.title-status');
+const playerList = document.querySelector('.player-list')
 
 var votingConns = [];
 
@@ -33,6 +34,7 @@ function socket_initializeEvents() {
     socket.on('wait', socket_onWait);
     socket.on('start timer', socket_onTimer);
     socket.on('notify', socket_onNotify);
+    socket.on('update players', socket_onUpdatePlayers);
 }
 
 function socket_joinRoom() {
@@ -114,6 +116,17 @@ function socket_onTimer(data) {
     }
 
     id = setInterval(i, 1000)
+}
+
+function socket_onUpdatePlayers(data={}) {
+    if (data.players === null) {
+        return;
+    }
+
+    playerList.innerHTML = "";
+    data.players.forEach((name) => {
+        playerList.innerHTML += PLAYER_TEMPLATE.replaceAll("{name}", name);
+    });
 }
 
 function initVoting() {

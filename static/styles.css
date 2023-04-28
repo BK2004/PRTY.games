@@ -834,6 +834,25 @@ tr:nth-child(7n-7) td:first-child {
   display: block;
 }
 
+.player-list {
+  position: absolute;
+  top: 75px;
+  left: 0;
+  width: 150px;
+}
+
+.player-frame {
+  position: relative;
+}
+
+.player-frame:nth-child(2n) {
+  background-color: #e6e6e6;
+}
+
+.player-frame:nth-child(2n+1) {
+  background-color: #cccccc;
+}
+
 @keyframes animCircle {
   to {
     transform: rotate(360deg);
